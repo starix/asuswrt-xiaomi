@@ -333,7 +333,7 @@ char *processPacket(int sockfd, char *pdubuf, unsigned short cli_port)
 		     strcpy(ginfo->ProductID, productid_g);	// disable for tmp
 		     strcpy(ginfo->FirmwareVersion, firmver_g);	// disable for tmp
 		     memcpy(ginfo->MacAddress, mac, 6);
-		     ginfo->sw_mode = get_sw_mode();
+		     ginfo->sw_mode = sw_mode();
 #ifdef WCLIENT
 		     ginfo->OperationMode = OPERATION_MODE_WB;
 		     ginfo->Regulation = 0xff;
@@ -449,7 +449,7 @@ char *processPacket(int sockfd, char *pdubuf, unsigned short cli_port)
 		     strcpy(ginfo->ProductID, productid_g);	// disable for tmp
 		     strcpy(ginfo->FirmwareVersion, firmver_g); // disable for tmp
 		     memcpy(ginfo->MacAddress, mac, 6);
-		     ginfo->sw_mode = get_sw_mode();
+		     ginfo->sw_mode = sw_mode();
 
 #ifdef WAVESERVER    // eric++
 	     	     // search /tmp/waveserver and get information
