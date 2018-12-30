@@ -327,6 +327,7 @@ struct rtnexthop {
 #define RTNH_F_PERVASIVE	2	/* Do recursive gateway lookup	*/
 #define RTNH_F_ONLINK		4	/* Gateway is forced on link	*/
 
+#define RTNH_F_LINKDOWN		16	/* carrier-down on nexthop */
 /* Macros to handle hexthops */
 
 #define RTNH_ALIGNTO	4
