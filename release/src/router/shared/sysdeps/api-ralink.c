@@ -27,7 +27,7 @@
 
 typedef uint32_t __u32;
 
-#if defined(RTN14U) || defined(RTAC52U) || defined(RTAC51U) || defined(RTN11P) || defined(RTN300) || defined(RTN54U) || defined(RTAC1200HP) || defined(RTN56UB1) || defined(RTN56UB2) ||defined(RTAC54U) || defined(RTAC51UP)|| defined(RTAC53) || defined(RTAC1200GA1) || defined(RTAC1200GU) || defined(RTAC1200) || defined(RTN11P_B1) || defined(RPAC87) || defined(RTAC85U) || defined(RTAC85P) || defined(RTAC65U) || defined(RTN800HP) || defined(RTACRH26)
+#if defined(RTN14U) || defined(RTAC52U) || defined(RTAC51U) || defined(RTN11P) || defined(RTN300) || defined(RTN54U) || defined(RTAC1200HP) || defined(RTN56UB1) || defined(RTN56UB2) ||defined(RTAC54U) || defined(RTAC51UP)|| defined(RTAC53) || defined(RTAC1200GA1) || defined(RTAC1200GU) || defined(RTAC1200) || defined(RTN11P_B1) || defined(RPAC87) || defined(RTAC85U) || defined(RTAC85P) || defined(RTAC65U) || defined(RTN800HP) || defined(RTACRH26) || defined(RTMIR3G)
 const char WIF_5G[]	= "rai0";
 const char WIF_2G[]	= "ra0";
 const char WDSIF_5G[]	= "wdsi";
@@ -340,7 +340,7 @@ typedef struct CountryCodeToCountryRegion {
 
 COUNTRY_CODE_TO_COUNTRY_REGION allCountry[] = {
 	/* {Country Number, ISO Name, Country Name, Support 11A, 11A Country Region, Support 11G, 11G Country Region} */
-	{"DB", A_BAND_REGION_7, G_BAND_REGION_5},
+	{"DB", A_BAND_REGION_21, G_BAND_REGION_1},
 	{"AL", A_BAND_REGION_0, G_BAND_REGION_1},
 	{"DZ", A_BAND_REGION_0, G_BAND_REGION_1},
 #ifdef RTCONFIG_LOCALE2012
