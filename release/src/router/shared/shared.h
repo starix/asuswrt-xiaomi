@@ -694,6 +694,7 @@ enum {
 	MODEL_GTAX6000,
 	MODEL_GTAX6000N,
 	MODEL_GTAX6000S,
+    MODEL_RTMIR3G,
 };
 
 /* NOTE: Do not insert new entries in the middle of this enum,
