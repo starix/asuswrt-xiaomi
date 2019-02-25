@@ -142,17 +142,10 @@ typedef struct usb_ctrlrequest devctrlrequest;
 #ifdef CONFIG_AP_SUPPORT
 #ifdef RTMP_MAC_PCI
 
-#if (CONFIG_RT_FIRST_CARD == 7603)
  #define AP_RTMP_FIRMWARE_FILE_NAME	"/etc_ro/Wireless/RT2860AP.bin"
  #define AP_PROFILE_PATH		"/etc/Wireless/RT2860/RT2860AP.dat"
  #define SINGLE_SKU_TABLE_FILE_NAME	"/etc/Wireless/RT2860/SingleSKU.dat"
  #define CARD_INFO_PATH			"/etc/Wireless/RT2860/RT2860APCard.dat"
-#else
- #define AP_RTMP_FIRMWARE_FILE_NAME	"/etc_ro/Wireless/iNIC_ap.bin"
- #define AP_PROFILE_PATH		"/etc/Wireless/iNIC/iNIC_ap.dat"
- #define SINGLE_SKU_TABLE_FILE_NAME	"/etc/Wireless/iNIC/SingleSKU.dat"
- #define CARD_INFO_PATH			"/etc/Wireless/iNIC/RT2860APCard.dat"
-#endif
 
 #define AP_DRIVER_VERSION		"4.1.0.0_pre"
 
