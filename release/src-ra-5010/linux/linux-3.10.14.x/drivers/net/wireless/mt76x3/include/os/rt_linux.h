@@ -728,6 +728,7 @@ do{                                   \
 do{                                   \
 	ULONG __gLevel = (Level) & 0xff;\
 	ULONG __fLevel = ((Level) & 0xffffff00);\
+    if (__gLevel <= RT_DEBUG_ERROR) /*reduce driver size*/ \
     if (__gLevel <= RTDebugLevel)      \
     {                               \
     	if ((RTDebugFunc == 0) || \
