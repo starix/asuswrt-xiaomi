@@ -109,7 +109,7 @@ static struct mtd_partition g_pasStatic_Partition[] = {
                 name:           "RootFS",
                 size:           0x1E00000,
                 offset:         0xA00000,
-#ifdef CONFIG_DUAL_TRX
+//#ifdef CONFIG_DUAL_TRX
         }, {
                 name:           "linux2",
                 size:           0x400000,
@@ -118,7 +118,7 @@ static struct mtd_partition g_pasStatic_Partition[] = {
                 name:           "RootFS2",
                 size:           0x1E00000,
                 offset:         0x2800000,
-#endif	/* CONFIG_DUAL_TRX */
+//#endif	/* CONFIG_DUAL_TRX */
 #endif
 #ifdef CONFIG_DUAL_IMAGE
         }, {
@@ -132,15 +132,15 @@ static struct mtd_partition g_pasStatic_Partition[] = {
                 offset:         MTD_ROOTFS2_PART_OFFSET,
 #endif
 #endif
-        },{
+        }, {
                 name:           "jffs2",
                 size:           0x3200000,
                 offset:         0x4600000,
-        } ,{
+        }, {
                 name:           "ALL",
                 size:           MTDPART_SIZ_FULL,
                 offset:         0,
-        } ,{
+        }, {
                 name:           "RootFS-default",
                 size:           0x1E00000,
                 offset:         0,

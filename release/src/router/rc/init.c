@@ -3848,8 +3848,7 @@ int init_nvram(void)
 #if defined(RTMIR3G)
 	case MODEL_RTMIR3G:
 		nvram_set("boardflags", "0x100"); // although it is not used in ralink driver, set for vlan
-		nvram_set("vlan1hwname", "et0");  // vlan. used to get "%smacaddr" for compare and find parent interface.
-		nvram_set("vlan2hwname", "et0");  // vlan. used to get "%smacaddr" for compare and find parent interface.
+		nvram_set("vlan1hwname", "eth2");  // vlan. used to get "%smacaddr" for compare and find parent interface.
 		nvram_set("lan_ifname", "br0");
 
 		wl_ifaces[WL_2G_BAND] = "ra0";
@@ -8674,7 +8673,9 @@ int init_nvram(void)
 #endif
 
 #ifdef RTCONFIG_PUSH_EMAIL
+#if !defined(RTMIR3G)
 	add_rc_support("feedback");
+#endif
 	add_rc_support("email");
 #ifdef RTCONFIG_DBLOG
 	add_rc_support("dblog");
@@ -10028,6 +10029,8 @@ static void sysinit(void)
                     if (!MTDPartitionRead((i == 1) ? "linux" : "linux2", buf, 0, 0x400000))
                     if (!MTDPartitionRead((i == 1) ? "RootFS" : "RootFS2", &buf[0x400000], 0, 0x1E00000)) {
                         force_reboot = 1;
+                        led_control(0, 0);
+                        led_control(1, 1);
                         int j1 = open((i == 1) ? "/dev/mtdblock6" : "/dev/mtdblock4", O_WRONLY | O_SYNC, DEFFILEMODE);
                         _dprintf("MIR3G: Flashing (1/2)...\n");
                         if (!write(j1, buf, 0x400000))
@@ -10047,6 +10050,8 @@ static void sysinit(void)
                 if (buf) {
                     if (!MTDPartitionRead("RootFS2", buf, 0, 0x1E00000)) {
                         force_reboot = 1;
+                        led_control(0, 0);
+                        led_control(1, 1);
                         int j1 = open("/dev/mtdblock5", O_WRONLY | O_SYNC, DEFFILEMODE);
                         _dprintf("MIR3G: Flashing...\n");
                         if (write(j1, buf, 0x1E00000))
@@ -10059,7 +10064,7 @@ static void sysinit(void)
                 }
             }
         } else { // newly flashed image, process it!
-            int offset;
+            unsigned int offset;
             _dprintf("MIR3G: Need to reflash new image\n");
             buf = malloc(0x100000 * 34);
             if (buf) {
@@ -10072,7 +10077,12 @@ static void sysinit(void)
                     offset = buf[63] + buf[62] * 0x100 + buf[61] * 0x10000;
                     if ((buf[60] == 169) && (offset > 0x100000) && (offset < 0x200000) && (buf[offset] == 'h') && (buf[offset + 1] == 's') && (buf[offset + 2] == 'q') && (buf[offset + 3] == 's')) {
                         memset(&buf[offset], 0xFF, 0x400000 - offset);
+			offset = buf[offset + 0x2B] << 24 + buf[offset + 0x2A] << 16 + buf[offset + 0x29] << 8 + buf[offset + 0x28];
+                        if ((offset > 0x1000000) && (offset < 0x1E00000))
+                            memset(&buf[offset + 0x400000], 0xFF, 0x1E00000 - offset);
                         force_reboot = 1;
+			led_control(0, 0);
+			led_control(1, 1);
                         int j1 = open("/dev/mtdblock7", O_WRONLY | O_SYNC, DEFFILEMODE);
                         _dprintf("MIR3G: Flashing (1/4)...\n");
                         if (!write(j1, &buf[0x400000], 0x1E00000))

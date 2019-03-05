@@ -135,6 +135,24 @@ int wl_ioctl(const char *ifname, int cmd, struct iwreq *pwrq)
 	return ret;
 }
 
+#if defined(RTMIR3G)
+unsigned int get_radio_status(char *ifname)
+{
+	struct ifreq ifr;
+	int sfd;
+	int ret;
+
+	if ((sfd = socket(AF_INET, SOCK_RAW, IPPROTO_RAW)) >= 0)
+	{
+		strcpy(ifr.ifr_name, ifname);
+		ret = ioctl(sfd, SIOCGIFFLAGS, &ifr);
+		close(sfd);
+		if (ret == 0)
+			return !!(ifr.ifr_flags & IFF_UP);
+	}
+	return 0;
+}
+#else
 unsigned int get_radio_status(char *ifname)
 {
 	struct iwreq wrq;
@@ -148,6 +166,7 @@ unsigned int get_radio_status(char *ifname)
 
 	return data;
 }
+#endif
 
 int get_radio(int unit, int subunit)
 {

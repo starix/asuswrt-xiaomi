@@ -184,7 +184,7 @@ static void init_switch_ralink(void)
 #ifdef RTCONFIG_RALINK_RT3052
 	if(is_routing_enabled()) config_3052(nvram_get_int("switch_stb_x"));
 #else
-#if !defined(RTCONFIG_CONCURRENTREPEATER)		
+#if !defined(RTCONFIG_CONCURRENTREPEATER)
 	if(strlen(nvram_safe_get("wan0_ifname"))) {
 		if (!nvram_match("et1macaddr", ""))
 			eval("ifconfig", nvram_safe_get("wan0_ifname"), "hw", "ether", nvram_safe_get("et1macaddr"));
@@ -357,7 +357,7 @@ void config_switch()
 	case MODEL_RTACRH26:
 	case MODEL_RPAC87:
 	case MODEL_RTN800HP:
-    case MODEL_RTMIR3G:
+	case MODEL_RTMIR3G:
 		merge_wan_port_into_lan_ports = 1;
 		break;
 	default:
@@ -1028,8 +1028,8 @@ void init_syspara(void)
 #endif	/* RTAC51U */
 
 
-#if defined(RTAC1200HP) || defined(RTN56UB1) || defined(RTN56UB2) || defined(RTAC1200GA1) || defined(RTAC1200GU) || defined(RTAC85U) || defined(RTAC85P) || defined(RTN800HP) || defined(RTACRH26)
-#if defined(RTAC85U) || defined(RTAC85P) || defined(RTN800HP) || defined(RTACRH26)
+#if defined(RTAC1200HP) || defined(RTN56UB1) || defined(RTN56UB2) || defined(RTAC1200GA1) || defined(RTAC1200GU) || defined(RTAC85U) || defined(RTAC85P) || defined(RTN800HP) || defined(RTACRH26) || defined(RTMIR3G)
+#if defined(RTAC85U) || defined(RTAC85P) || defined(RTN800HP) || defined(RTACRH26) || defined(RTMIR3G)
 	char brstp;
 #else
 	char fixch;
@@ -1087,8 +1087,8 @@ void init_syspara(void)
 	}
 #endif	/* RTAC51U FIX EU2CN */
 
-#if defined(RTAC1200HP) || defined(RTN56UB1) || defined(RTN56UB2) || defined(RTAC1200GA1) || defined(RTAC1200GU) || defined(RTAC85U) || defined(RTAC85P) || defined(RTN800HP) || defined(RTACRH26)
-#if defined(RTAC85U) || defined(RTAC85P) || defined(RTN800HP) || defined(RTACRH26)
+#if defined(RTAC1200HP) || defined(RTN56UB1) || defined(RTN56UB2) || defined(RTAC1200GA1) || defined(RTAC1200GU) || defined(RTAC85U) || defined(RTAC85P) || defined(RTN800HP) || defined(RTACRH26) || defined(RTMIR3G)
+#if defined(RTAC85U) || defined(RTAC85P) || defined(RTN800HP) || defined(RTACRH26) || defined(RTMIR3G)
 	brstp='0';
 	FRead(&brstp, OFFSET_BR_STP, 1);
 	if(brstp=='1')
@@ -1130,15 +1130,15 @@ void init_syspara(void)
 	else
 		nvram_set("wl_mssid", "1");
 
+#if !defined(RTMIR3G)
 #if defined(RTN14U) || defined(RTN11P) || defined(RTN300) || defined(RTN11P_B1) || defined(RTN800HP)// single band
 	nvram_set("et0macaddr", macaddr);
 	nvram_set("et1macaddr", macaddr);
 #else
-#if defined(RTAC1200) || defined(RTAC53) || defined(RTMIR3G)
+#if defined(RTAC1200) || defined(RTAC53)
 	nvram_set("et0macaddr", macaddr2);
 	nvram_set("et1macaddr", macaddr);
 #else
-#if !defined(RTMIR3G)
 	//TODO: separate for different chipset solution
 	nvram_set("et0macaddr", macaddr);
 	nvram_set("et1macaddr", macaddr2);
@@ -1148,27 +1148,16 @@ void init_syspara(void)
 	if (FRead(dst, OFFSET_MAC_GMAC0, bytes)<0)
 		dbg("READ MAC address GMAC0: Out of scope\n");
 	else {
-        ether_etoa(buffer, macaddr);
-    }
-#if defined(RTMIR3G)
-	if (!nvram_get("et0macaddr")) {
 		ether_etoa(buffer, macaddr);
 		nvram_set("et0macaddr", macaddr);
 	}
-#endif
 
 	if (FRead(dst, OFFSET_MAC_GMAC2, bytes)<0)
 		dbg("READ MAC address GMAC2: Out of scope\n");
 	else {
-        ether_etoa(buffer, macaddr2);
-    }
-
-#if defined(RTMIR3G)
-        if (!nvram_get("et1macaddr")) {
-                ether_etoa(buffer, macaddr2);
-                nvram_set("et1macaddr", macaddr2);
-        }
-#endif
+		ether_etoa(buffer, macaddr2);
+		nvram_set("et1macaddr", macaddr2);
+	}
 
 	{
 #ifdef RTCONFIG_ODMPID
