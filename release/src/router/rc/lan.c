@@ -127,6 +127,9 @@ void update_lan_state(int state, int reason)
 		ptr = nvram_get_int(strcat_r(prefix, "dnsenable_x", tmp)) ? "" :
 			get_userdns_r(prefix, tmp1, sizeof(tmp1));
 		nvram_set(strcat_r(prefix, "dns", tmp), ptr);
+#if defined(RTMIR3G)
+        eval("vconfig", "add", "eth2", "1");
+#endif
 	}
 	else if(state==LAN_STATE_STOPPED) {
 		// Save Stopped Reason

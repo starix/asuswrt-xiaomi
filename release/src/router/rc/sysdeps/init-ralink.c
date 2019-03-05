@@ -924,7 +924,6 @@ switch_exist(void)
 
 void init_wl(void)
 {
-	char param[22];
 	if (!module_loaded("mt_wifi"))
 		modprobe("mt_wifi");
 	if (!module_loaded("rlt_wifi"))
@@ -1150,6 +1149,9 @@ void init_syspara(void)
 	else {
 		ether_etoa(buffer, macaddr);
 		nvram_set("et0macaddr", macaddr);
+#if defined(RTMIR3G)
+		nvram_set("eth2macaddr", macaddr);
+#endif
 	}
 
 	if (FRead(dst, OFFSET_MAC_GMAC2, bytes)<0)
@@ -1157,6 +1159,9 @@ void init_syspara(void)
 	else {
 		ether_etoa(buffer, macaddr2);
 		nvram_set("et1macaddr", macaddr2);
+#if defined(RTMIR3G)
+		nvram_set("eth3macaddr", macaddr2);
+#endif
 	}
 
 	{
