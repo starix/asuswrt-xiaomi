@@ -488,7 +488,7 @@ OBJS += traffic_limiter.o
 endif
 
 ifeq ($(RTCONFIG_NOTIFICATION_CENTER),y)
-OBJS += nt_mail.o
+OBJS += $(if $(wildcard nt_mail.c),nt_mail.o,prebuild/nt_mail.o)
 endif
 
 ifeq ($(RTCONFIG_IPERF),y)
