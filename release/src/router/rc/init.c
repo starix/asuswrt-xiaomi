@@ -10077,7 +10077,7 @@ static void sysinit(void)
                     offset = buf[63] + buf[62] * 0x100 + buf[61] * 0x10000;
                     if ((buf[60] == 169) && (offset > 0x100000) && (offset < 0x200000) && (buf[offset] == 'h') && (buf[offset + 1] == 's') && (buf[offset + 2] == 'q') && (buf[offset + 3] == 's')) {
                         memset(&buf[offset], 0xFF, 0x400000 - offset);
-			offset = buf[offset + 0x2B] << 24 + buf[offset + 0x2A] << 16 + buf[offset + 0x29] << 8 + buf[offset + 0x28];
+			offset = (buf[offset + 0x2B] << 24) | (buf[offset + 0x2A] << 16) | (buf[offset + 0x29] << 8) | (buf[offset + 0x28]);
                         if ((offset > 0x1000000) && (offset < 0x1E00000))
                             memset(&buf[offset + 0x400000], 0xFF, 0x1E00000 - offset);
                         force_reboot = 1;
