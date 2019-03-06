@@ -47,13 +47,8 @@ extern const char APCLI_2G[];
 #define INIC_VLAN_ID_START	4 //first vlan id used for RT3352 iNIC MII
 #define INIC_VLAN_IDX_START	2 //first available index to set vlan id and its group.
 
-#if defined(RTMIR3G)
-#define RT_802_11_MAC_ENTRY_for_2G              RT_802_11_MAC_ENTRY_7603E
-#define RT_802_11_MAC_ENTRY_for_5G              RT_802_11_MAC_ENTRY_7603E
-#define MACHTTRANSMIT_SETTING_for_2G            MACHTTRANSMIT_SETTING_3G
-#define MACHTTRANSMIT_SETTING_for_5G            MACHTTRANSMIT_SETTING_3G
-#else
-#if defined(RTCONFIG_WLMODULE_MT7610_AP)
+
+#if defined(RTCONFIG_WLMODULE_MT7610_AP) || defined(RTMIR3G)
 #define RT_802_11_MAC_ENTRY_for_5G		RT_802_11_MAC_ENTRY_11AC
 #define MACHTTRANSMIT_SETTING_for_5G		MACHTTRANSMIT_SETTING_11AC
 #else
@@ -63,7 +58,7 @@ extern const char APCLI_2G[];
 
 #if defined(RTN65U)
 #define RT_802_11_MAC_ENTRY_for_2G		RT_802_11_MAC_ENTRY_RT3352_iNIC
-#elif defined(RTN56UB1) || defined(RTN56UB2) || defined(RTAC1200GA1) || defined(RTAC1200GU)
+#elif defined(RTN56UB1) || defined(RTN56UB2) || defined(RTAC1200GA1) || defined(RTAC1200GU) || defined(RTMIR3G)
 #define RT_802_11_MAC_ENTRY_for_2G		RT_802_11_MAC_ENTRY_7603E
 #else
 #define RT_802_11_MAC_ENTRY_for_2G		RT_802_11_MAC_ENTRY_2G
@@ -89,19 +84,34 @@ typedef union  _MACHTTRANSMIT_SETTING {
 // MIMO Tx parameter, ShortGI, MCS, STBC, etc.  these are fields in TXWI. Don't change this definition!!!
 typedef union  _MACHTTRANSMIT_SETTING_2G {
 	struct  {
+#if defined(RTMIR3G)
+	unsigned short	MCS:6;	// MCS
+    unsigned short  ldpc:1;
+    unsigned short	BW:2;
+	unsigned short	ShortGI:1;
+	unsigned short	STBC:1;
+	unsigned short	rsv:2;
+	unsigned short	MODE:3;
+#else
 	unsigned short	MCS:7;	// MCS
 	unsigned short	BW:1;	//channel bandwidth 20MHz or 40 MHz
 	unsigned short	ShortGI:1;
 	unsigned short	STBC:2;	//SPACE
 	unsigned short	rsv:3;
 	unsigned short	MODE:2;	// Use definition MODE_xxx.
+#endif
 	} field;
 	unsigned short	word;
  } MACHTTRANSMIT_SETTING_2G, *PMACHTTRANSMIT_SETTING_2G;
 
 typedef union  _MACHTTRANSMIT_SETTING_11AC {
 	struct  {
+#if defined(RTMIR3G)
+	unsigned short	MCS:6;	// MCS
+    unsigned short  ldpc:1;
+#else
 	unsigned short	MCS:7;	// MCS
+#endif
 	unsigned short	BW:2;	//channel bandwidth 20MHz or 40 MHz
 	unsigned short	ShortGI:1;
 	unsigned short	STBC:1;	//SPACE
