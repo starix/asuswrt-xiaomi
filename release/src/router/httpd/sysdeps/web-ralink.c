@@ -613,15 +613,15 @@ wl_status(int eid, webs_t wp, int argc, char_t **argv, int unit)
 	else if (phy_mode==PHY_11AGN_MIXED)
 		ret+=websWrite(wp, "Phy Mode	: 11a/g/n/an\n");
         else if (phy_mode==PHY_11N_5G)
-                ret+=websWrite(wp, "Phy Mode    : 11an\n");
+                ret+=websWrite(wp, "Phy Mode	: 11an\n");
         else if (phy_mode==PHY_11VHT_N_ABG_MIXED)
-                ret+=websWrite(wp, "Phy Mode    : 11a/b/g/n/an/ac\n");
+                ret+=websWrite(wp, "Phy Mode	: 11a/b/g/n/an/ac\n");
         else if (phy_mode==PHY_11VHT_N_AG_MIXED)
-                ret+=websWrite(wp, "Phy Mode    : 11a/g/n/an/ac\n");
+                ret+=websWrite(wp, "Phy Mode	: 11a/g/n/an/ac\n");
         else if (phy_mode==PHY_11VHT_N_A_MIXED)
-                ret+=websWrite(wp, "Phy Mode    : 11a/g/n/an/ac\n");
+                ret+=websWrite(wp, "Phy Mode	: 11a/g/n/an/ac\n");
         else if (phy_mode==PHY_11VHT_N_MIXED)
-                ret+=websWrite(wp, "Phy Mode    : 11an/ac\n");
+                ret+=websWrite(wp, "Phy Mode	: 11an/ac\n");
 
 	ret+=websWrite(wp, "Channel		: %d\n", channel);
 
