@@ -548,7 +548,7 @@ wl_status(int eid, webs_t wp, int argc, char_t **argv, int unit)
 	else
 		ret+=websWrite(wp, "OP Mode		: AP\n");
 
-#if defined(RTAC52U) || defined(RTAC51U) || defined(RTN54U)  || defined(RTAC1200HP) || defined(RTAC54U) || defined(RTAC1200) || defined(RTAC1200GA1) || defined(RTAC1200GU) || defined(RTAC85U) || defined(RTAC85P) || defined(MTK_REP) || defined(RTACRH26) || defined(RTMIR3G)
+#if defined(RTAC52U) || defined(RTAC51U) || defined(RTN54U)  || defined(RTAC1200HP) || defined(RTAC54U) || defined(RTAC1200) || defined(RTAC1200GA1) || defined(RTAC1200GU) || defined(RTAC85U) || defined(RTAC85P) || defined(MTK_REP) || defined(RTACRH26)
 	if (unit == 1)
 	{
 		char *p = tmp;
@@ -601,17 +601,27 @@ wl_status(int eid, webs_t wp, int argc, char_t **argv, int unit)
 	else if (phy_mode==PHY_11G)
 		ret+=websWrite(wp, "Phy Mode	: 11g\n");
 	else if (phy_mode==PHY_11ABGN_MIXED)
-		ret+=websWrite(wp, "Phy Mode	: 11a/b/g/n\n");
+		ret+=websWrite(wp, "Phy Mode	: 11a/b/g/n/an\n");
 	else if (phy_mode==PHY_11N)
 		ret+=websWrite(wp, "Phy Mode	: 11n\n");
 	else if (phy_mode==PHY_11GN_MIXED)
 		ret+=websWrite(wp, "Phy Mode	: 11g/n\n");
 	else if (phy_mode==PHY_11AN_MIXED)
-		ret+=websWrite(wp, "Phy Mode	: 11a/n\n");
+		ret+=websWrite(wp, "Phy Mode	: 11a/an\n");
 	else if (phy_mode==PHY_11BGN_MIXED)
 		ret+=websWrite(wp, "Phy Mode	: 11b/g/n\n");
 	else if (phy_mode==PHY_11AGN_MIXED)
-		ret+=websWrite(wp, "Phy Mode	: 11a/g/n\n");
+		ret+=websWrite(wp, "Phy Mode	: 11a/g/n/an\n");
+        else if (phy_mode==PHY_11N_5G)
+                ret+=websWrite(wp, "Phy Mode    : 11an\n");
+        else if (phy_mode==PHY_11VHT_N_ABG_MIXED)
+                ret+=websWrite(wp, "Phy Mode    : 11a/b/g/n/an/ac\n");
+        else if (phy_mode==PHY_11VHT_N_AG_MIXED)
+                ret+=websWrite(wp, "Phy Mode    : 11a/g/n/an/ac\n");
+        else if (phy_mode==PHY_11VHT_N_A_MIXED)
+                ret+=websWrite(wp, "Phy Mode    : 11a/g/n/an/ac\n");
+        else if (phy_mode==PHY_11VHT_N_MIXED)
+                ret+=websWrite(wp, "Phy Mode    : 11an/ac\n");
 
 	ret+=websWrite(wp, "Channel		: %d\n", channel);
 

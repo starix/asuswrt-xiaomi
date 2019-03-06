@@ -47,6 +47,12 @@ extern const char APCLI_2G[];
 #define INIC_VLAN_ID_START	4 //first vlan id used for RT3352 iNIC MII
 #define INIC_VLAN_IDX_START	2 //first available index to set vlan id and its group.
 
+#if defined(RTMIR3G)
+#define RT_802_11_MAC_ENTRY_for_2G              RT_802_11_MAC_ENTRY_7603E
+#define RT_802_11_MAC_ENTRY_for_5G              RT_802_11_MAC_ENTRY_7603E
+#define MACHTTRANSMIT_SETTING_for_2G            MACHTTRANSMIT_SETTING_3G
+#define MACHTTRANSMIT_SETTING_for_5G            MACHTTRANSMIT_SETTING_3G
+#else
 #if defined(RTCONFIG_WLMODULE_MT7610_AP)
 #define RT_802_11_MAC_ENTRY_for_5G		RT_802_11_MAC_ENTRY_11AC
 #define MACHTTRANSMIT_SETTING_for_5G		MACHTTRANSMIT_SETTING_11AC
@@ -63,6 +69,7 @@ extern const char APCLI_2G[];
 #define RT_802_11_MAC_ENTRY_for_2G		RT_802_11_MAC_ENTRY_2G
 #endif
 #define MACHTTRANSMIT_SETTING_for_2G		MACHTTRANSMIT_SETTING_2G
+#endif
 
 // MIMO Tx parameter, ShortGI, MCS, STBC, etc.  these are fields in TXWI. Don't change this definition!!!
 typedef union  _MACHTTRANSMIT_SETTING {
@@ -104,6 +111,20 @@ typedef union  _MACHTTRANSMIT_SETTING_11AC {
 	} field;
 	unsigned short	word;
  } MACHTTRANSMIT_SETTING_11AC, *PMACHTTRANSMIT_SETTING_11AC;
+
+typedef union  _MACHTTRANSMIT_SETTING_3G {
+        struct  {
+        unsigned short  MCS:6;  // MCS
+	unsigned short  ldpc:1;
+        unsigned short  BW:2;   //channel bandwidth 20MHz or 40 MHz
+        unsigned short  ShortGI:1;
+        unsigned short  STBC:1; //SPACE
+        unsigned short  eTxBF:1;
+        unsigned short  iTxBF:1;
+        unsigned short  MODE:3; // Use definition MODE_xxx.
+        } field;
+        unsigned short  word;
+ } MACHTTRANSMIT_SETTING_3G, *PMACHTTRANSMIT_SETTING_3G;
 
 typedef struct _RT_802_11_MAC_ENTRY_RT3352_iNIC {
     unsigned char	ApIdx;
