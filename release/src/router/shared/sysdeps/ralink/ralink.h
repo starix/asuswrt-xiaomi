@@ -57,7 +57,7 @@ extern const char APCLI_2G[];
 
 #if defined(RTN65U)
 #define RT_802_11_MAC_ENTRY_for_2G		RT_802_11_MAC_ENTRY_RT3352_iNIC
-#elif defined(RTN56UB1) || defined(RTN56UB2) || defined(RTAC1200GA1) || defined(RTAC1200GU) || defined(RTMIR3G)
+#elif defined(RTN56UB1) || defined(RTN56UB2) || defined(RTAC1200GA1) || defined(RTAC1200GU)
 #define RT_802_11_MAC_ENTRY_for_2G		RT_802_11_MAC_ENTRY_7603E
 #else
 #define RT_802_11_MAC_ENTRY_for_2G		RT_802_11_MAC_ENTRY_2G
