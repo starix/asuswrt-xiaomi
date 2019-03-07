@@ -3848,7 +3848,7 @@ int init_nvram(void)
 #if defined(RTMIR3G)
 	case MODEL_RTMIR3G:
 		nvram_set("boardflags", "0x100"); // although it is not used in ralink driver, set for vlan
-		nvram_set("vlan1hwname", "eth2");  // vlan. used to get "%smacaddr" for compare and find parent interface.
+		nvram_set("vlan1hwname", "et0");  // vlan. used to get "%smacaddr" for compare and find parent interface.
 		nvram_set("lan_ifname", "br0");
 
 		wl_ifaces[WL_2G_BAND] = "ra0";
