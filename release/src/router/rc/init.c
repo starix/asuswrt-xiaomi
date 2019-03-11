@@ -10352,10 +10352,12 @@ static void sysinit(void)
 	write_caldata_file();
 #endif
 
+#if defined(RTCONFIG_TCODE)
 #if !defined(CONFIG_BCMWL5)	//Broadcom set this in check_wl_territory_code()
 	void handle_location_code_for_wl(void);
 	handle_location_code_for_wl();
 #endif	/* CONFIG_BCMWL5 */
+#endif
 
 	init_gpio();   // for system dependent part
 #if defined(RTCONFIG_CONCURRENTREPEATER)
