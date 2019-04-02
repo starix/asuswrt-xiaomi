@@ -14,8 +14,8 @@ export CONFIGURE := ./configure --host=mipsel-linux --build=$(BUILD)
 export HOSTCONFIG := linux-mipsel
 export ARCH := mips
 export HOST := mipsel-linux
-export KERNELCC := /opt/buildroot-gcc463/usr/bin/mipsel-linux-gcc
-export KERNELLD := /opt/buildroot-gcc463/usr/bin/mipsel-linux-ld
+export KERNELCC := mipsel-linux-gcc
+export KERNELLD := mipsel-linux-ld
 export TOOLS := $(SRCBASE)/../../tools/brcm/hndtools-mipsel-linux
 export RTVER := 0.9.30.1
 
