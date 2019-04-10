@@ -659,7 +659,7 @@ wl_status(int eid, webs_t wp, int argc, char_t **argv, int unit)
 				Entry->Psm ? "Yes" : "NO ",								\
 				GetPhyMode(Entry->TxRate.field.MODE),							\
 				GetBW(Entry->TxRate.field.BW),								\
-				Entry->TxRate.field.MCS,								\
+				Entry->TxRate.field.MCS & 15,								\
 				Entry->TxRate.field.ShortGI ? "Yes" : "NO ",						\
 				Entry->TxRate.field.STBC ? "Yes" : "NO ",						\
 				_gr(Entry->TxRate),									\
