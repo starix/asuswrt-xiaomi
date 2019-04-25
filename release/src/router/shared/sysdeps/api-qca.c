@@ -81,7 +81,7 @@ ieee80211_mhz2ieee(u_int freq)
 }
 /////////////
 
-#if defined(RTCONFIG_WIFI_QCA9557_QCA9882) || defined(RTCONFIG_QCA953X) || defined(RTCONFIG_QCA956X) || defined(RTCONFIG_SOC_IPQ40XX)
+#if defined(RTCONFIG_WIFI_QCA9557_QCA9882) || defined(RTCONFIG_QCA953X) || defined(RTCONFIG_QCA956X) || defined(RTCONFIG_QCN550X) || defined(RTCONFIG_SOC_IPQ40XX)
 const char WIF_5G[] = "ath1";
 const char WIF_2G[] = "ath0";
 const char STA_5G[] = "sta1";

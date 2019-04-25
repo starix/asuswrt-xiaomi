@@ -289,7 +289,7 @@ function initial(){
 	gen_exception_list_table();
 
 	//	https://www.asus.com/support/FAQ/1033909
-	httpApi.faqURL("faq1", "1033909", "https://www.asus.com", "/support/FAQ/");	//this id is include in string : #VPN_Fusion_FAQ#	
+	httpApi.faqURL("1033909", function(url){document.getElementById("faq1").href=url;});	//this id is include in string : #VPN_Fusion_FAQ#	
 }
 function gen_exception_list_table() {
 	//set table Struct

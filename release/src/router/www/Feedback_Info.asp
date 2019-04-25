@@ -36,6 +36,10 @@ FWString += "_"+extendno;
 function initial(){
 	show_menu();
 	check_info();
+	$("#bind_google")
+		.attr('target','_self')
+		.attr("href", "Advanced_Feedback.asp?provider=google&reload=1")
+		.attr("style", "text-decoration:underline;color:#FFCC00;");
 }
 
 function check_info(){

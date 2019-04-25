@@ -395,4 +395,5 @@ extern int change_location(char *lang);
 #ifdef RTCONFIG_WTF_REDEEM
 extern void wtfast_gen_partnercode(char *str, size_t size);
 #endif
+extern void update_wlan_log(int sig);
 #endif /* _httpd_h_ */

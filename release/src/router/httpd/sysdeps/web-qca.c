@@ -642,7 +642,7 @@ typedef struct _WLANCONFIG_LIST {
 	unsigned int chan;
 	char txrate[10];
 	char rxrate[10];
-	unsigned int rssi;
+	int rssi;
 	unsigned int idle;
 	unsigned int txseq;
 	unsigned int rxseq;
@@ -690,23 +690,15 @@ typedef struct _WIFI_STA_TABLE {
 static int __getSTAInfo(int unit, WIFI_STA_TABLE *sta_info, char *ifname, char id)
 {
 	FILE *fp;
-	int l2_offset, subunit;
-	char *l2, *l3;
+	int l2_offset, subunit, channf, ax2he = 0;
+	char *l2, *l3, *p;
 	char line_buf[300]; // max 14x
 	char subunit_str[4] = "0", wlif[sizeof("wlX.Yxxx")];
 
-	if (unit < 0 || unit >= MAX_NR_WL_IF)
+	if (absent_band(unit))
 		return -1;
 	if (!ifname || *ifname == '\0')
 		return -1;
-#if !defined(RTCONFIG_HAS_5G_2)
-	if (unit == 2)
-		return -1;
-#endif
-#if !defined(RTCONFIG_WIGIG)
-	if (unit == 3)
-		return -1;
-#endif
 
 	subunit = get_wlsubnet(unit, ifname);
 	if (subunit < 0)
@@ -715,6 +707,12 @@ static int __getSTAInfo(int unit, WIFI_STA_TABLE *sta_info, char *ifname, char i
 		dbg("%s: invalid subunit %d\n", __func__, subunit);
 		return -2;
 	}
+
+#if defined(RTCONFIG_WIFI_QCN5024_QCN5054)
+	if (!find_word(nvram_safe_get("rc_support"), "11AX"))
+		ax2he = 1;
+#endif
+	channf = QCA_DEFAULT_NOISE_FLOOR;
 
 	snprintf(wlif, sizeof(wlif), "wl%d.%d", unit, subunit);
 	if (subunit >= 0 && subunit < MAX_NO_MSSID)
@@ -749,6 +747,12 @@ ADDR               AID CHAN TXRATE RXRATE RSSI IDLE  TXSEQ  RXSEQ  CAPS        A
 			if (l3) {
 				*(l3 - 1) = '\0';
 				sscanf(l3, "IEEE80211_MODE_%s %d", r->mode, &r->u_psmode);
+				if (ax2he) {
+					if ((p = strstr(r->mode, "11AXA")) != NULL)
+						memcpy(p, "11AHE", 5);
+					else if ((p = strstr(r->mode, "11AXG")) != NULL)
+						memcpy(p, "11GHE", 5);
+				}
 			}
 			*(l2 - 1) = '\0';
 			sscanf(line_buf, "%s%u%u%s%s%u%u%u%u%[^\n]",
@@ -759,6 +763,8 @@ ADDR               AID CHAN TXRATE RXRATE RSSI IDLE  TXSEQ  RXSEQ  CAPS        A
 				&r->u_acaps, &r->u_erp, &r->u_state_maxrate, r->htcaps, r->conn_time, r->ie);
 			if (strlen(r->rxrate) >= 6)
 				strcpy(r->rxrate, "0M");
+			convert_mac_string(r->addr);
+			r->rssi += channf;
 #if 0
 			dbg("[%s][%u][%u][%s][%s][%u][%u][%u][%u][%s]"
 				"[%u][%u][%x][%s][%s][%s][%d]\n",
@@ -767,7 +773,6 @@ ADDR               AID CHAN TXRATE RXRATE RSSI IDLE  TXSEQ  RXSEQ  CAPS        A
 				r->u_acaps, r->u_erp, r->u_state_maxrate, r->htcaps, r->ie,
 				r->mode, r->u_psmode);
 #endif
-				convert_mac_string(r->addr);
 		}
 
 		fclose(fp);
@@ -2247,7 +2252,7 @@ static struct nat_accel_kmod_s {
 } nat_accel_kmod[] = {
 #if defined(RTCONFIG_SOC_IPQ8064)
 	{ "ecm" },
-#elif defined(RTCONFIG_SOC_QCA9557) || defined(RTCONFIG_QCA953X) || defined(RTCONFIG_QCA956X) || defined(RTCONFIG_SOC_IPQ40XX)
+#elif defined(RTCONFIG_SOC_QCA9557) || defined(RTCONFIG_QCA953X) || defined(RTCONFIG_QCA956X) || defined(RTCONFIG_QCN550X) || defined(RTCONFIG_SOC_IPQ40XX)
 	{ "shortcut_fe" },
 #else
 #error Implement nat_accel_kmod[]

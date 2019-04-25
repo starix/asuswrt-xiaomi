@@ -1571,13 +1571,19 @@ int asus_ate_command(const char *command, const char *value, const char *value2)
 	}
 #endif
 #ifdef RTCONFIG_QCA
-#if defined(RTCONFIG_WIFI_QCA9557_QCA9882) || defined(RTCONFIG_QCA953X) || defined(RTCONFIG_QCA956X)
-#ifdef RTCONFIG_ART2_BUILDIN
+#if defined(RTCONFIG_WIFI_QCA9557_QCA9882) || defined(RTCONFIG_QCA953X) || defined(RTCONFIG_QCA956X) || defined(RTCONFIG_QCN550X)
 	else if (!strcmp(command, "Set_ART2")) {
+#ifdef RTCONFIG_ART2_BUILDIN
 		Set_ART2();
+#else
+		if (value == NULL || strlen(value) <= 0) {
+			printf("ATE_ERROR_INCORRECT_PARAMETER\n");
+			return EINVAL;
+		}
+		Set_ART2(value);
+#endif
 		return 0;
 	}
-#endif
 	else if (!strncmp(command, "Get_EEPROM_", 11)) {
 		Get_EEPROM_X(command);
 		return 0;
@@ -1587,7 +1593,7 @@ int asus_ate_command(const char *command, const char *value, const char *value2)
 		return 0;
 	}
 #endif
-#if defined(RTCONFIG_WIFI_QCA9990_QCA9990) || defined(RTCONFIG_WIFI_QCA9994_QCA9994) || defined(RTCONFIG_PCIE_QCA9880) || defined(RTCONFIG_PCIE_QCA9882) || defined(RTCONFIG_SOC_IPQ40XX) || defined(RPAC51)
+#if defined(RTCONFIG_WIFI_QCA9990_QCA9990) || defined(RTCONFIG_WIFI_QCA9994_QCA9994) || defined(RTCONFIG_PCIE_AR9888) || defined(RTCONFIG_PCIE_QCA9888) || defined(RTCONFIG_SOC_IPQ40XX)
 	else if (!strcmp(command, "Set_Qcmbr")) {
 #if defined(RTCONFIG_QCA) && defined(RTCONFIG_SOC_IPQ40XX)
 		nvram_set_int("restwifi_qis", 1);
@@ -1598,7 +1604,7 @@ int asus_ate_command(const char *command, const char *value, const char *value2)
 		return 0;
 	}
 #endif
-#if defined(RTCONFIG_WIFI_QCA9990_QCA9990) || defined(RTCONFIG_WIFI_QCA9994_QCA9994) || defined(RTCONFIG_SOC_IPQ40XX) || defined(RPAC51)
+#if defined(RTCONFIG_WIFI_QCA9990_QCA9990) || defined(RTCONFIG_WIFI_QCA9994_QCA9994) || defined(RTCONFIG_PCIE_QCA9888) || defined(RTCONFIG_SOC_IPQ40XX)
 	/* ATE Get_BData_2G / ATE Get_BData_5G
 	 * To prevent whole ATE command strings exposed in rc binary,
 	 * compare these commands in 3 steps instead.

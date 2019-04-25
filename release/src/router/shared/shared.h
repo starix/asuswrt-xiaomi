@@ -620,6 +620,8 @@ enum {
 	MODEL_RTAC55U,
 	MODEL_RTAC55UHP,
 	MODEL_RT4GAC55U,
+	MODEL_RTN19,
+	MODEL_RTAC59U,
 	MODEL_PLN12,
 	MODEL_PLAC56,
 	MODEL_PLAC66U,
@@ -1083,6 +1085,33 @@ enum wl_band_id {
 
 	WL_NR_BANDS				/* Maximum number of Wireless bands of all models. */
 };
+
+static inline int absent_band(enum wl_band_id band)
+{
+	if (band < WL_2G_BAND || band >= WL_NR_BANDS)
+		return 1;
+#if defined(RTCONFIG_RALINK) || defined(RTCONFIG_QCA)
+	if (band >= MAX_NR_WL_IF)
+		return 1;
+#if !defined(RTCONFIG_HAS_5G)
+	if (band == WL_5G_BAND)
+		return 1;
+#if !defined(RTCONFIG_HAS_5G_2)
+	if (band == WL_5G_2_BAND)
+		return 1;
+#endif	/* RTCONFIG_HAS_5G_2 */
+#endif	/* RTCONFIG_HAS_5G */
+#endif	/* RTCONFIG_RALINK || RTCONFIG_QCA */
+#if !defined(RTCONFIG_WIGIG)
+	if (band == WL_60G_BAND)
+		return 1;
+#endif
+
+	if (!nvram_get(wl_nvname("nband", band, 0)))
+		return 1;
+
+	return 0;
+}
 
 #define SKIP_ABSENT_FAKE_IFACE(iface)		if (!strncmp(iface, "FAKE", 4)) { continue; }
 #define SKIP_ABSENT_BAND(u)			if (!nvram_get(wl_nvname("nband", u, 0))) { continue; }
@@ -1564,6 +1593,7 @@ extern chanspec_t select_band1_chspec_with_same_bw(char *wif, chanspec_t chanspe
 extern chanspec_t select_band4_chspec_with_same_bw(char *wif, chanspec_t chanspec);
 extern chanspec_t select_chspec_with_band_bw(char *wif, int band, int bw, chanspec_t chanspec);
 extern void wl_list_5g_chans(int unit, int band, char *buf, int len);
+extern int wl_cap(int unit, char *cap_check);
 #endif
 #ifdef RTCONFIG_AMAS
 //extern char *get_pap_bssid(int unit);
@@ -1962,7 +1992,7 @@ extern void set_wifiled(int mode);
 #define RGBLED_3ON3OFF			0x80
 #define RGBLED_BLINK_MESK		RGBLED_SBLINK | RGBLED_3ON1OFF | RGBLED_ATE_MODE | RGBLED_3ON3OFF
 /* color+blink */
-#define RGBLED_BLUE_3ON1OFF		RGBLED_BLUE | RGBLED_3ON1OFF
+#define RGBLED_GREEN_3ON1OFF		RGBLED_GREEN | RGBLED_3ON1OFF
 #define RGBLED_BLUE_3ON3OFF		RGBLED_BLUE | RGBLED_3ON3OFF
 #define RGBLED_PURPLE_3ON1OFF		RGBLED_PURPLE | RGBLED_3ON1OFF
 #define RGBLED_WHITE_SBLINK		RGBLED_WHITE | RGBLED_SBLINK
@@ -2319,4 +2349,6 @@ static inline int get_sw_mode(void)
 	return UI_SW_MODE_NONE;
 }
 
+extern int get_discovery_ssid(char *ssid_g, int size);
+extern int get_chance_to_control(void);
 #endif	/* !__SHARED_H__ */

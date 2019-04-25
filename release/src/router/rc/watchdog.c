@@ -3147,7 +3147,7 @@ void btn_check(void)
 #if (defined(PLN12) || defined(PLAC56))
 						set_wifiled(3);
 #elif defined(MAPAC1750)
-						set_rgbled(RGBLED_BLUE_3ON1OFF);
+						set_rgbled(RGBLED_GREEN_3ON1OFF);
 #endif
 #endif // RTCONFIG_WIFI_CLONE
 
@@ -5633,38 +5633,43 @@ static void ntevent_disk_usage_check(){
 }
 #endif
 
+#ifdef RTCONFIG_FORCE_AUTO_UPGRADE
+/* DEBUG DEFINE */
+#define FAUPGRADE_DEBUG             "/tmp/FAUPGRADE_DEBUG"
+
+/* DEBUG FUNCTION */
+
+#define FAUPGRADE_DBG(fmt,args...) \
+    { \
+        char msg[1024]; \
+        snprintf(msg, sizeof(msg), "[FAUPGRADE][%s:(%d)]"fmt"", __FUNCTION__, __LINE__, ##args); \
+        logmessage("WATCHDOG", "%s",msg); \
+        dbg("%s\n",msg); \
+        if(f_exists(FAUPGRADE_DEBUG) > 0) { \
+                char info[1024]; \
+                snprintf(info, sizeof(info), "echo \"%s\" >> /tmp/FAUPGRADE_DEBUG.log", msg); \
+                system(info); \
+        } \
+    }
+
 static void auto_firmware_check()
 {
-#ifdef RTCONFIG_FORCE_AUTO_UPGRADE
-	static int period = -1;
-	static int bootup_check = 0;
-#else
-	static int period = 5757;
+	static int period_retry = -1;
+	static int period = 2877;
 	static int bootup_check = 1;
-#endif
 	static int periodic_check = 0;
-#ifndef RTCONFIG_FORCE_AUTO_UPGRADE
 	int cycle_manual = nvram_get_int("fw_check_period");
-	int cycle = (cycle_manual > 1) ? cycle_manual : 5760;
-#endif
+	int cycle = (cycle_manual > 1) ? cycle_manual : 2880;
+
 	time_t now;
 	struct tm *tm;
-#ifndef RTCONFIG_FORCE_AUTO_UPGRADE
 	static int rand_hr, rand_min;
-#endif
 
-	if (!nvram_get_int("ntp_ready"))
+	if (!nvram_get_int("ntp_ready")){
+		FAUPGRADE_DBG("ntp_ready false");
 		return;
+	}
 
-#ifdef RTCONFIG_FORCE_AUTO_UPGRADE
-	setenv("TZ", nvram_safe_get("time_zone_x"), 1);
-	time(&now);
-	tm = localtime(&now);
-	if ((tm->tm_hour >= 2) && (tm->tm_hour <= 6))	// 2 am to 6 am
-		periodic_check = 1;
-	else
-		periodic_check = 0;
-#else
 	if (!bootup_check && !periodic_check)
 	{
 		time(&now);
@@ -5677,26 +5682,22 @@ static void auto_firmware_check()
 			period = -1;
 		}
 	}
-#endif
 
 	if (bootup_check || periodic_check)
-#ifdef RTCONFIG_FORCE_AUTO_UPGRADE
-		period = (period + 1) % 20;
-#else
 		period = (period + 1) % cycle;
-#endif
 	else
 		return;
-
-	if (!period)
+	//FAUPGRADE_DBG("period = %d, period_retry = %d, bootup_check = %d", period, period_retry, bootup_check);
+	if (!period || (period_retry < 2 && bootup_check == 0))
 	{
+		period_retry = (period_retry+1) % 3;
+		FAUPGRADE_DBG("period_retry = %d", period_retry);
 		if (bootup_check)
 		{
 			bootup_check = 0;
-#ifndef RTCONFIG_FORCE_AUTO_UPGRADE
 			rand_hr = rand_seed_by_time() % 4;
 			rand_min = rand_seed_by_time() % 60;
-#endif
+			FAUPGRADE_DBG("periodic_check AM %d:%d", 2 + rand_hr, rand_min);
 		}
 
 		if(!nvram_contains_word("rc_support", "noupdate")){
@@ -5716,18 +5717,21 @@ static void auto_firmware_check()
 		    !nvram_get_int("webs_state_error") &&
 		    strlen(nvram_safe_get("webs_state_info")))
 		{
-			dbg("retrieve firmware information\n");
+			FAUPGRADE_DBG("retrieve firmware information");
 
-#ifdef RTCONFIG_FORCE_AUTO_UPGRADE
-			if (nvram_get("login_ip") && !nvram_match("login_ip", ""))
+			if (!get_chance_to_control()){
+				FAUPGRADE_DBG("user in use");
 				return;
+			}
 
-			if (nvram_match("x_Setting", "0"))
+			if (nvram_match("x_Setting", "0")){
+				FAUPGRADE_DBG("default status");
 				return;
+			}
 
 			if (nvram_get_int("webs_state_flag") != 2)
 			{
-				dbg("no need to upgrade firmware\n");
+				FAUPGRADE_DBG("no need to upgrade firmware");
 				return;
 			}
 
@@ -5737,7 +5741,7 @@ static void auto_firmware_check()
 
 			if (nvram_get_int("webs_state_error"))
 			{
-				dbg("error execute upgrade script\n");
+				FAUPGRADE_DBG("error execute upgrade script");
 				goto ERROR;
 			}
 
@@ -5748,21 +5752,20 @@ static void auto_firmware_check()
 #endif
 			while ((count-- > 0) && (nvram_get_int("webs_state_upgrade") == 1))
 			{
-				dbg("reboot count down: %d\n", count);
+				FAUPGRADE_DBG("reboot count down: %d", count);
 				sleep(1);
 			}
 
 			reboot(RB_AUTOBOOT);
-#endif
 		}
-		else
-			dbg("could not retrieve firmware information!\n");
-#ifdef RTCONFIG_FORCE_AUTO_UPGRADE
+		else{
+			FAUPGRADE_DBG("could not retrieve firmware information: webs_state_update = %d, webs_state_error = %d, webs_state_info.len = %d", nvram_get_int("webs_state_update"), nvram_get_int("webs_state_error"), strlen(nvram_safe_get("webs_state_info")));
+		}
 ERROR:
 		nvram_set_int("auto_upgrade", 0);
-#endif
 	}
 }
+#endif
 
 #ifdef RTCONFIG_WIFI_SON
 static void link_pap_status()
@@ -5837,7 +5840,7 @@ static void link_pap_status()
 #if defined(RTCONFIG_LP5523)
 							lp55xx_leds_proc(LP55XX_GREENERY_LEDS, LP55XX_ACT_3ON1OFF);
 #elif defined(MAPAC1750)
-							set_rgbled(RGBLED_BLUE_3ON1OFF);
+							set_rgbled(RGBLED_GREEN_3ON1OFF);
 #endif
 						}
 					}
@@ -7018,8 +7021,9 @@ wdp:
 		modem_flow_check(modem_unit);
 #endif
 #endif
+#ifdef RTCONFIG_FORCE_AUTO_UPGRADE
 	auto_firmware_check();
-
+#endif
 #ifdef RTCONFIG_BWDPI
 	auto_sig_check();		// libbwdpi.so
 	web_history_save();		// libbwdpi.so

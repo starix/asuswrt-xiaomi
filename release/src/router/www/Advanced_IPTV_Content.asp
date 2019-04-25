@@ -119,6 +119,12 @@ function initial(){
 		document.getElementById("voip_port3").innerHTML = "LAN port 1";
 		document.getElementById("iptv_port4").innerHTML = "LAN port 2";
 	}
+	else if(based_modelid == "MAP-AC1300" || based_modelid == "MAP-AC2200" || based_modelid == "MAP-AC1750"){
+		document.getElementById("iptv_port").innerHTML = "Primary Node LAN Port";
+		document.getElementById("voip_port").innerHTML = "Primary Node LAN Port";
+		document.getElementById("iptv_port4").innerHTML = "Primary Node LAN Port";
+		create_stb_options();
+	}
 
 	if(based_modelid == "AC2900"){	//MODELDEP: AC2900(RT-AC86U)
 		for(var r=document.form.switch_wantag.length-2;r>0;r--){	//Keep none & Manual
@@ -142,22 +148,6 @@ function initial(){
 	if(port2_device){
 		document.getElementById('singtelMioOption').outerHTML = "";
 	}
-
-	var portName = {
-		"voip": "LAN3",
-		"iptv": "LAN4"
-	}
-
-	if(based_modelid == "MAP-AC1300" || based_modelid == "MAP-AC2200" || based_modelid == "MAP-AC1750"){
-		portName.voip = "Primary Node LAN Port";
-		portName.iptv = "Primary Node LAN Port";
-		document.getElementById("iptv_port4").innerHTML = portName.voip;
-		create_stb_options();
-	}
-
-	//var portName = httpApi.getIptvProfile();
-	document.getElementById("iptv_port").innerHTML = portName.iptv;
-	document.getElementById("voip_port").innerHTML = portName.voip;
 }
 
 function create_stb_options(){

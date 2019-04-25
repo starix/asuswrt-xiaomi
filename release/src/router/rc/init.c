@@ -833,7 +833,7 @@ restore_defaults_wifi(int all)
 	unsigned int max_mssid;
 	char prefix[]="wlXXXXXX_", tmp[100];
 
-#ifdef RTCONFIG_NEWSSID_REV2
+#if defined(RTCONFIG_NEWSSID_REV2) || defined(RTCONFIG_NEWSSID_REV4)
 	rev3 = 1;
 #endif
 	unit = 0;
@@ -1510,6 +1510,8 @@ misc_defaults(int restore_defaults)
 		case MODEL_RT4GAC55U:
 		case MODEL_RTAC55U:
 		case MODEL_RTAC55UHP:
+		case MODEL_RTN19:
+		case MODEL_RTAC59U:
 		case MODEL_PLN12:
 		case MODEL_PLAC56:
 		case MODEL_PLAC66U:
@@ -1966,7 +1968,7 @@ static void set_term(int fd)
 	/* set control chars */
 	tty.c_cc[VINTR]  = 3;	/* C-c */
 	tty.c_cc[VQUIT]  = 28;	/* C-\ */
-	tty.c_cc[VERASE] = 127; /* C-? */
+	tty.c_cc[VERASE] = 8; /* C-H */
 	tty.c_cc[VKILL]  = 21;	/* C-u */
 	tty.c_cc[VEOF]   = 4;	/* C-d */
 	tty.c_cc[VSTART] = 17;	/* C-q */
@@ -2027,17 +2029,26 @@ static int console_init(void)
 
 static pid_t run_shell(int timeout, int nowait)
 {
-#ifdef LOGIN
-	char *argv[] = { LOGIN, "-p", NULL };
-#else
-	char *argv[] = { SHELL, NULL };
-#endif
+	char *argv_shell[] = { SHELL, NULL };
+	char *argv_login[] = { LOGIN, "-p", NULL };
+	char **argv = argv_shell;
 	pid_t pid;
 	int sig;
 
 	/* Wait for user input */
 	if (waitfor(STDIN_FILENO, timeout) <= 0)
 		return 0;
+
+#ifdef CONFIG_BCMWL5
+	if (!ATE_BRCM_FACTORY_MODE())
+#else
+	if (!IS_ATE_FACTORY_MODE())
+#endif
+	{
+		if (!check_if_file_exist("/etc/shadow"))
+			setup_passwd();
+		argv = argv_login;
+	}
 
 	switch (pid = fork()) {
 	case -1:
@@ -2590,7 +2601,7 @@ static int set_basic_ifname_vars(char *wan, char *lan, char *wl_ifaces[WL_NR_BAN
 	}
 
 #if (defined(RTCONFIG_DUALWAN) && defined(RTCONFIG_QCA))
-#if (defined(PLN12) || defined(PLAC56) || defined(PLAC66U) || defined(RTCONFIG_SOC_IPQ40XX))
+#if defined(RTCONFIG_QCA953X) || defined(RTCONFIG_QCA956X) || defined(RTCONFIG_QCN550X) || defined(RTCONFIG_SOC_IPQ40XX)
 #else /* RT-AC55U || 4G-AC55U */
 	if(enable_dw_wan) {
 		nvram_set("vlan2hwname", "et0");
@@ -3836,6 +3847,7 @@ int init_nvram(void)
 		add_rc_support("switchctrl");
 		add_rc_support("manual_stb");
 		add_rc_support("11AC");
+		add_rc_support("app");
 		//add_rc_support("pwrctrl");
 		// the following values is model dep. so move it from default.c to here
 		nvram_set("wl0_HT_TxStream", "4");
@@ -3913,6 +3925,7 @@ int init_nvram(void)
 		add_rc_support("switchctrl");
 		add_rc_support("manual_stb");
 		add_rc_support("11AC");
+		add_rc_support("app");
 		//add_rc_support("pwrctrl");
 		// the following values is model dep. so move it from default.c to here
 		nvram_set("wl0_HT_TxStream", "4");
@@ -4455,7 +4468,8 @@ int init_nvram(void)
 		config_netdev_bled("led_blue_gpio", "ath0");
 		add_gpio_to_bled("led_blue_gpio", "led_green_gpio");
 		add_gpio_to_bled("led_blue_gpio", "led_red_gpio");
-		set_rgbled(RGBLED_BLUE_3ON3OFF);
+		if (nvram_match("success_start_service", "0"))
+			set_rgbled(RGBLED_BLUE_3ON3OFF);
 
 		/* Etron xhci host:
 		 *	USB2 bus: 1-1
@@ -4703,6 +4717,85 @@ int init_nvram(void)
 		add_rc_support("11AC");
 		break;
 #endif	/* RT4GAC55U */
+
+#if defined(RTN19)
+	case MODEL_RTN19:
+		nvram_set("boardflags", "0x100"); // although it is not used in ralink driver, set for vlan
+		nvram_set("vlan1hwname", "et0");  // vlan. used to get "%smacaddr" for compare and find parent interface.
+		nvram_set("vlan2hwname", "et0");  // vlan. used to get "%smacaddr" for compare and find parent interface.
+		nvram_set("lan_ifname", "br0");
+		wl_ifaces[WL_2G_BAND] = "ath0";
+		set_basic_ifname_vars("vlan2", "vlan1", wl_ifaces, NULL, "vlan1", "vlan2", "vlan3", NULL, 0);
+
+		nvram_set_int("btn_rst_gpio", 17|GPIO_ACTIVE_LOW);
+		nvram_set_int("btn_wps_gpio", 1|GPIO_ACTIVE_LOW);
+		nvram_set_int("led_2g_gpio", 15|GPIO_ACTIVE_LOW);
+		nvram_set_int("led_wps_gpio", 16|GPIO_ACTIVE_LOW);
+		nvram_set_int("led_pwr_gpio", 16|GPIO_ACTIVE_LOW);
+		nvram_set_int("led_wan_gpio", 4|GPIO_ACTIVE_LOW);
+#ifdef RTCONFIG_LAN4WAN_LED
+		nvram_set_int("led_lan1_gpio", 3|GPIO_ACTIVE_LOW);
+		nvram_set_int("led_lan2_gpio", 2|GPIO_ACTIVE_LOW);
+#endif
+
+		/* enable bled */
+		config_netdev_bled("led_2g_gpio", "ath0");
+
+		nvram_set("ct_max", "300000"); // force
+
+		if (nvram_get("wl_mssid") && nvram_match("wl_mssid", "1"))
+			add_rc_support("mssid");
+		add_rc_support("2.4G update");
+		add_rc_support("qcawifi");
+		add_rc_support("manual_stb");
+		// the following values is model dep. so move it from default.c to here
+		nvram_set("wl0_HT_TxStream", "4");
+		nvram_set("wl0_HT_RxStream", "4");
+		break;
+#endif	/* RTN19 */
+
+#if defined(RTAC59U)
+	case MODEL_RTAC59U:
+		nvram_set("boardflags", "0x100"); // although it is not used in ralink driver, set for vlan
+		nvram_set("vlan1hwname", "et0");  // vlan. used to get "%smacaddr" for compare and find parent interface.
+		nvram_set("vlan2hwname", "et0");  // vlan. used to get "%smacaddr" for compare and find parent interface.
+		nvram_set("lan_ifname", "br0");
+		wl_ifaces[WL_2G_BAND] = "ath0";
+		wl_ifaces[WL_5G_BAND] = "ath1";
+		set_basic_ifname_vars("vlan2", "vlan1", wl_ifaces, "usb", "vlan1", "vlan2", "vlan3", NULL, 0);
+
+		nvram_set_int("btn_rst_gpio", 17|GPIO_ACTIVE_LOW);
+		nvram_set_int("btn_wps_gpio", 1|GPIO_ACTIVE_LOW);
+		nvram_set_int("led_usb_gpio", 4|GPIO_ACTIVE_LOW);
+		nvram_set_int("led_2g_gpio", 15|GPIO_ACTIVE_LOW);
+		nvram_set_int("led_5g_gpio",  5|GPIO_ACTIVE_LOW);
+		nvram_set_int("led_wps_gpio", 16|GPIO_ACTIVE_LOW);
+		nvram_set_int("led_pwr_gpio", 16|GPIO_ACTIVE_LOW);
+
+		/* enable bled */
+		config_netdev_bled("led_2g_gpio", "ath0");
+		config_netdev_bled("led_5g_gpio", "ath1");
+
+		nvram_set("ehci_ports", "1-1 3-1");
+		nvram_set("ohci_ports", "1-1 4-1");
+
+		nvram_set("ct_max", "300000"); // force
+
+		if (nvram_get("wl_mssid") && nvram_match("wl_mssid", "1"))
+			add_rc_support("mssid");
+		add_rc_support("2.4G 5G update usbX1");
+		add_rc_support("qcawifi");
+		add_rc_support("switchctrl");
+		add_rc_support("manual_stb");
+		add_rc_support("11AC");
+		add_rc_support("nodm");
+		// the following values is model dep. so move it from default.c to here
+		nvram_set("wl0_HT_TxStream", "4");
+		nvram_set("wl0_HT_RxStream", "4");
+		nvram_set("wl1_HT_TxStream", "2");
+		nvram_set("wl1_HT_RxStream", "2");
+		break;
+#endif	/* RTAC59U */
 
 #if defined(PLN12)
 	case MODEL_PLN12:
@@ -10326,6 +10419,9 @@ static void sysinit(void)
 		}
 	}
 #endif
+#if defined(MAPAC1750)
+	nvram_set("success_start_service", "0");
+#endif
 	init_nvram();  // for system indepent part after getting model
 	restore_defaults(); // restore default if necessary
 	init_nvram2();
@@ -10780,6 +10876,8 @@ dbg("boot/continue fail= %d/%d\n", nvram_get_int("Ate_boot_fail"),nvram_get_int(
 #ifdef RTCONFIG_IPV6
 			if ( !(ipv6_enabled() && is_routing_enabled()) )
 				f_write_string("/proc/sys/net/ipv6/conf/all/disable_ipv6", "1", 0, 0);
+			else
+				set_default_accept_ra(0);
 #endif
 
 #if defined(RTCONFIG_RALINK_MT7628)

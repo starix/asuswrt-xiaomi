@@ -541,7 +541,7 @@ obj-y += qca-wifi-fw-qca9888
 #obj-y += qca-ssdk.collard
 #obj-y += qca-ssdk-shell.collard
 endif
-obj-$(MAPAC1750) += libnl-bf
+obj-$(or $(MAPAC1750),$(QCN550X)) += libnl-bf
 
 # IPQ8064.ILQ 3.0
 obj-$(RTCONFIG_WIFI_QCA9994_QCA9994) += qca-wifi-qca9994
@@ -574,8 +574,8 @@ obj-$(RTCONFIG_SOC_IPQ8064) += taskset
 obj-$(RTCONFIG_SOC_IPQ40XX) += qca-edma.ipq40xx
 obj-$(RTCONFIG_SOC_IPQ40XX) += qca-wifi.ipq40xx
 obj-$(RTCONFIG_SOC_IPQ40XX) += qca-wifi-fw.ipq40xx
-obj-$(RTCONFIG_PCIE_QCA9984) += qca-wifi-fw.qca9984
-obj-$(RTCONFIG_PCIE_QCA9888) += qca-wifi-fw.qca9888
+obj-$(RTCONFIG_SOC_IPQ40XX) += $(if $(or $(RTCONFIG_PCIE_QCA9984)),qca-wifi-fw.qca9984)
+obj-$(RTCONFIG_SOC_IPQ40XX) += $(if $(or $(RTCONFIG_PCIE_QCA9888)),qca-wifi-fw.qca9888)
 obj-$(RTCONFIG_SOC_IPQ40XX) += qcmbr.ipq40xx
 obj-$(RTCONFIG_SOC_IPQ40XX) += qca-hostap.ipq40xx
 obj-$(RTCONFIG_SOC_IPQ40XX) += qca-rfs.ipq40xx
@@ -2395,20 +2395,22 @@ cyassl-clean:
 cyassl-install:
 	@true
 
-ifeq ($(RTCONFIG_OPENVPN),y)
-OPENSSL_CIPHERS:=enable-rc5
-else
 #OPENSSL_CIPHERS:=no-dh no-idea no-rc2 no-rc5 no-aes no-aes192 no-cast no-des no-modes no-tls1 no-tlsext
-OPENSSL_CIPHERS:=
+#      no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd \
+#      no-seed no-capieng no-cms no-gms no-gmp no-rfc3779 \
+#      no-ec no-ecdh no-ecdsa no-err no-hw no-jpake no-threads \
+#      no-zlib no-engine no-engines no-sse2 no-perlasm \
+#      no-dtls1 no-store no-psk no-md2 no-mdc2 no-ts
+OPENSSL_CIPHERS := no-ssl2 no-gost no-heartbeats no-err no-unit-test
+ifeq ($(RTCONFIG_OPENVPN),y)
+OPENSSL_CIPHERS += enable-rc5
 endif
-
-#OPENSSL_CIPHERS:=enable-aes enable-tls1 enable-tlsext
 
 openssl-1.0.0q/Makefile:
 	cd openssl-1.0.0q && \
 	./Configure $(HOSTCONFIG) --prefix=/usr --openssldir=/etc --cross-compile-prefix=' ' \
-	-ffunction-sections -fdata-sections -Wl,--gc-sections \
-	shared $(OPENSSL_CIPHERS)
+	-Os -ffunction-sections -fdata-sections -Wl,--gc-sections \
+	shared $(OPENSSL_CIPHERS) enable-unit-test
 #	no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd \
 #	no-seed no-capieng no-cms no-gms no-gmp no-rfc3779 \
 #	no-ec no-ecdh no-ecdsa no-err no-hw no-jpake no-threads \
@@ -2440,21 +2442,7 @@ openssl-1.0.0q-stage:
 #	@$(MAKE) -C openssl-1.0.0q install_sw INSTALL_PREFIX=$(STAGEDIR)
 	@true
 
-openssl/Makefile:
-	cd openssl && \
-	./Configure $(HOSTCONFIG) --prefix=/usr --openssldir=/etc --cross-compile-prefix=' ' \
-	-ffunction-sections -fdata-sections -Wl,--gc-sections \
-	shared $(OPENSSL_CIPHERS)
-#	no-sha0 no-smime no-camellia no-krb5 no-rmd160 no-ripemd \
-#	no-seed no-capieng no-cms no-gms no-gmp no-rfc3779 \
-#	no-ec no-ecdh no-ecdsa no-err no-hw no-jpake no-threads \
-#	no-zlib no-engine no-engines no-sse2 no-perlasm \
-#	no-dtls1 no-store no-psk no-md2 no-mdc2 no-ts
-
-	@$(MAKE) -C openssl depend
-	@$(MAKE) -C openssl clean
-	@touch $@
-
+ifeq ($(HND_ROUTER),y)
 fsbuild:
 	-mkdir -p $(BCM_FSBUILD_DIR)/public/lib
 	-mkdir -p $(BCM_FSBUILD_DIR)/public/bin
@@ -2471,51 +2459,59 @@ fsbuild:
 	-mkdir -p $(INSTALL_DIR)/lib/aarch64
 	-mkdir -p $(INSTALL_DIR)/opt
 	-mkdir -p $(INSTALL_DIR)/sbin
-	-mkdir -p $(INSTALL_DIR)/usr
+	-mkdir -p $(INSTALL_DIR)/usr/lib
+	-mkdir -p $(INSTALL_DIR)/usr/sbin
 	-mkdir -p $(INSTALL_DIR)/var
 	-mkdir -p $(INSTALL_DIR)/mnt
 	-mkdir -p $(INSTALL_DIR)/tmp/etc
 	-mkdir -p $(INSTALL_DIR)/www
 	#-cp $(TOOLCHAIN)/arm-buildroot-linux-gnueabi/lib/libgcc_s* $(INSTALL_DIR)/lib/public
 	#-cd $(INSTALL_DIR)/lib/public && rm -f libgcc_s.so && ln -sf libgcc_s.so.1 libgcc_s.so
-
+endif
 
 ifeq ($(HND_ROUTER),y)
-openssl: openssl/Makefile fsbuild
+INSTALLSUBDIR =
 else
-openssl: openssl/Makefile
+INSTALLSUBDIR = /openssl
 endif
+
+openssl/Makefile:
+	cd openssl && \
+	./Configure $(HOSTCONFIG) --prefix=/usr --openssldir=/etc --cross-compile-prefix=' ' \
+	$(if $(filter y,$(RTCONFIG_SFP) $(RTCONFIG_4M_SFP) $(RTCONFIG_8M_SFP)),-Os,-O2) \
+	-ffunction-sections -fdata-sections -Wl,--gc-sections -Wa,--noexecstack \
+	shared $(OPENSSL_CIPHERS)
+	@$(MAKE) -C openssl depend
+	@$(MAKE) -C openssl clean
+	@touch $@
+
+openssl: openssl/Makefile $(if $(filter y,$(HND_ROUTER)),fsbuild,)
 	$(MAKE) -j 8 -C openssl && $(MAKE) $@-stage
 
 openssl-clean:
 	[ ! -f openssl/Makefile ] || $(MAKE) -C openssl clean
 	@rm -f openssl/Makefile
 
-ifeq ($(HND_ROUTER),y)
-INSTALLSUBDIR=
-else
-INSTALLSUBDIR=/openssl
-endif
-
 openssl-install:
-	[ ! -f openssl/Makefile ] || install -D openssl/libcrypto.so.1.0.0 $(INSTALLDIR)$(INSTALLSUBDIR)/usr/lib/libcrypto.so.1.0.0
-	[ ! -f openssl/Makefile ] || $(STRIP) $(INSTALLDIR)$(INSTALLSUBDIR)/usr/lib/libcrypto.so.1.0.0
-	[ ! -f openssl/Makefile ] || cd $(INSTALLDIR)$(INSTALLSUBDIR)/usr/lib && rm -f libcrypto.so && ln -sf libcrypto.so.1.0.0 libcrypto.so
-
-	[ ! -f openssl/Makefile ] || install -D openssl/apps/openssl $(INSTALLDIR)$(INSTALLSUBDIR)/usr/sbin/openssl
-	[ ! -f openssl/Makefile ] || $(STRIP) $(INSTALLDIR)$(INSTALLSUBDIR)/usr/sbin/openssl
-	[ ! -f openssl/Makefile ] || chmod 0500 $(INSTALLDIR)$(INSTALLSUBDIR)/usr/sbin/openssl
-
+ifneq ($(wildcard openssl/Makefile),)
+	install -D openssl/libcrypto.so.1.0.0 $(INSTALLDIR)$(INSTALLSUBDIR)/usr/lib/libcrypto.so.1.0.0
+	$(STRIP) $(INSTALLDIR)$(INSTALLSUBDIR)/usr/lib/libcrypto.so.1.0.0
 ifeq ($(or $(RTCONFIG_WEBDAV),$(RTCONFIG_FTP_SSL),$(RTCONFIG_OPENVPN),$(RTCONFIG_HTTPS)),y)
-	[ ! -f openssl/Makefile ] || install -D openssl/libssl.so.1.0.0 $(INSTALLDIR)$(INSTALLSUBDIR)/usr/lib/libssl.so.1.0.0
-	[ ! -f openssl/Makefile ] || $(STRIP) $(INSTALLDIR)$(INSTALLSUBDIR)/usr/lib/libssl.so.1.0.0
-	[ ! -f openssl/Makefile ] || cd $(INSTALLDIR)$(INSTALLSUBDIR)/usr/lib && rm -f libssl.so && ln -sf libssl.so.1.0.0 libssl.so
+	install -D openssl/libssl.so.1.0.0 $(INSTALLDIR)$(INSTALLSUBDIR)/usr/lib/libssl.so.1.0.0
+	$(STRIP) $(INSTALLDIR)$(INSTALLSUBDIR)/usr/lib/libssl.so.1.0.0
 endif
+	cd $(INSTALLDIR)$(INSTALLSUBDIR)/usr/lib && rm -f libcrypto.so && ln -sf libcrypto.so.1.0.0 libcrypto.so
+	[ ! -f $(INSTALLDIR)$(INSTALLSUBDIR)/usr/lib/libssl.so.1.0.0 ] || \
+		cd $(INSTALLDIR)$(INSTALLSUBDIR)/usr/lib && rm -f libssl.so && ln -sf libssl.so.1.0.0 libssl.so
+	install -D openssl/apps/openssl $(INSTALLDIR)$(INSTALLSUBDIR)/usr/sbin/openssl
+	$(STRIP) $(INSTALLDIR)$(INSTALLSUBDIR)/usr/sbin/openssl
+	chmod 0500 $(INSTALLDIR)$(INSTALLSUBDIR)/usr/sbin/openssl
 ifeq ($(HND_ROUTER),y)
-	[ ! -f openssl/Makefile ] || mkdir -p $(BCM_FSBUILD_DIR)/public/include/openssl
-	[ ! -f openssl/Makefile ] || cp -u openssl/include/openssl/* $(BCM_FSBUILD_DIR)/public/include/openssl
+	mkdir -p $(BCM_FSBUILD_DIR)/public/include/openssl
+	cp -u openssl/include/openssl/* $(BCM_FSBUILD_DIR)/public/include/openssl
 endif
-	[ ! -f openssl/Makefile ] || install -D -m 0500 httpd/gencert.sh $(INSTALLDIR)$(INSTALLSUBDIR)/usr/sbin/gencert.sh
+	install -D -m 0500 httpd/gencert.sh $(INSTALLDIR)$(INSTALLSUBDIR)/usr/sbin/gencert.sh
+endif
 
 openssl-stage:
 	$(MAKE) -C openssl install_sw INSTALL_PREFIX=$(STAGEDIR)
@@ -2697,7 +2693,8 @@ endif
 dnsmasq:
 	@$(SEP)
 	@$(MAKE) -C dnsmasq \
-	COPTS="-DHAVE_BROKEN_RTC -DHAVE_LEASEFILE_EXPIRE -DNO_ID -DNO_AUTH -DNO_IPSET -DNO_LOOP -DNO_INOTIFY \
+	COPTS="-DHAVE_BROKEN_RTC -DHAVE_LEASEFILE_EXPIRE -DEDNS_PKTSZ=1280 \
+		-DNO_ID -DNO_AUTH -DNO_IPSET -DNO_LOOP -DNO_INOTIFY -DNO_DUMPFILE \
 		$(if $(RTCONFIG_IPV6),-DUSE_IPV6,-DNO_IPV6) \
 		$(if $(RTCONFIG_USB_EXTRAS)||$(RTCONFIG_TR069),,-DNO_SCRIPT) \
 		$(if $(RTCONFIG_USB_EXTRAS),,-DNO_TFTP)" \
@@ -3530,7 +3527,8 @@ quagga/stamp-h1:
 	CC=$(CC) AR=$(AR) RANLIB=$(RANLIB) LD=$(LD) \
 	CFLAGS="$(CFLAGS) -Os -Wall -ffunction-sections -fdata-sections -fPIC" \
 	LDFLAGS="-ffunction-sections -fdata-sections -Wl,--gc-sections" \
-	$(CONFIGURE) --enable-shared=lib --disable-ripngd --disable-ospfd --disable-doc --disable-ospfclient \
+	$(CONFIGURE) --prefix=/usr --sysconfdir=/etc --enable-shared --disable-static \
+	--disable-ripngd --disable-ospfd --disable-doc --disable-ospfclient \
 	--disable-ospf6d --disable-bgpd --disable-bgp-announce --disable-babeld \
 	--disable-silent-rules \
 	--disable-isisd
@@ -3547,16 +3545,11 @@ quagga-install:
 	install -d $(INSTALLDIR)/quagga/usr/lib
 	libtool --mode=install install -c quagga/lib/libzebra.la $(INSTALLDIR)/quagga/usr/lib
 	libtool --finish $(INSTALLDIR)/quagga/usr/lib
-ifneq ($(HND_ROUTER),y)
-	rm -f $(INSTALLDIR)/quagga/usr/lib/libzebra.a
 	rm -f $(INSTALLDIR)/quagga/usr/lib/libzebra.la
-endif
+	$(STRIP)  $(INSTALLDIR)/quagga/usr/lib/libzebra.so
 	install -d $(INSTALLDIR)/quagga/usr/sbin
-	install -d $(INSTALLDIR)/quagga/usr/local/etc
 	libtool --mode=install install -c quagga/zebra/zebra $(INSTALLDIR)/quagga/usr/sbin
-	install -c -m 777 quagga/zebra/zebra.conf.sample $(INSTALLDIR)/quagga/usr/local/etc/zebra.conf
 	libtool --mode=install install -c quagga/ripd/ripd $(INSTALLDIR)/quagga/usr/sbin
-	install -c -m 777 quagga/ripd/ripd.conf.sample $(INSTALLDIR)/quagga/usr/local/etc/ripd.conf
 	libtool --mode=install install -c quagga/watchquagga/watchquagga $(INSTALLDIR)/quagga/usr/sbin
 	$(STRIP) $(INSTALLDIR)/quagga/usr/sbin/zebra
 	$(STRIP) $(INSTALLDIR)/quagga/usr/sbin/ripd
@@ -3865,6 +3858,9 @@ lldpd-0.9.8-install: lldpd-0.9.8
 	install -D lldpd-0.9.8/src/client/.libs/lldpcli $(INSTALLDIR)/lldpd-0.9.8/usr/sbin/lldpcli
 	install -D lldpd-0.9.8/src/daemon/lldpd $(INSTALLDIR)/lldpd-0.9.8/usr/sbin/lldpd
 	install -D lldpd-0.9.8/src/lib/.libs/liblldpctl.so.4.8.0 $(INSTALLDIR)/lldpd-0.9.8/usr/lib/liblldpctl.so.4.8.0
+	$(STRIP) $(INSTALLDIR)/lldpd-0.9.8/usr/sbin/lldpcli
+	$(STRIP) $(INSTALLDIR)/lldpd-0.9.8/usr/sbin/lldpd
+	$(STRIP) $(INSTALLDIR)/lldpd-0.9.8/usr/lib/liblldpctl.so.4.8.0
 	cd $(INSTALLDIR)/lldpd-0.9.8/usr/lib && ln -sf liblldpctl.so.4.8.0 liblldpctl.so && ln -sf liblldpctl.so.4.8.0 liblldpctl.so.4
 
 lldpd-0.9.8-clean:
@@ -7138,7 +7134,7 @@ wlan: wlcsm libxml2 json-c sqlite
 
 .PHONY : wlan
 
-websockets: openssl openssl-install
+websockets: openssl
 	$(MAKE) -C websockets
 
 websockets-install:

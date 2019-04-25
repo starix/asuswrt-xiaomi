@@ -72,7 +72,7 @@ var le_state = '<% nvram_get("le_state"); %>';
 
 function init(){
 	show_menu();
-	httpApi.faqURL("faq", "1034294", "https://www.asus.com", "/support/FAQ/");
+	httpApi.faqURL("1034294", function(url){document.getElementById("faq").href=url;});
     ddns_load_body();
 	update_ddns_wan_unit_option();
 

@@ -188,14 +188,6 @@ extern int ssl_stream_fd;
 #endif
 
 #include <iboxcom.h>
-#include <endian.h>
-#if __BYTE_ORDER == __BIG_ENDIAN
-#include <linux/byteorder/big_endian.h>
-#elif __BYTE_ORDER == __LITTLE_ENDIAN
-#include <linux/byteorder/little_endian.h>
-#else
-#error Unknown endian
-#endif
 
 extern int ej_wl_sta_list_2g(int eid, webs_t wp, int argc, char_t **argv);
 extern int ej_wl_sta_list_5g(int eid, webs_t wp, int argc, char_t **argv);
@@ -210,7 +202,7 @@ extern int ej_wl_stainfo_list_5g_2(int eid, webs_t wp, int argc, char_t **argv);
 #endif
 #endif
 extern int ej_wl_auth_list(int eid, webs_t wp, int argc, char_t **argv);
-#if defined(CONFIG_BCMWL5) || defined(RTCONFIG_QCA) || defined(RTCONFIG_LANTIQ)
+#if defined(CONFIG_BCMWL5) || defined(RTCONFIG_QCA) || defined(RTCONFIG_LANTIQ) || defined(RTCONFIG_RALINK)
 extern int ej_wl_control_channel(int eid, webs_t wp, int argc, char_t **argv);
 #endif
 extern int ej_get_wlstainfo_list(int eid, webs_t wp, int argc, char_t **argv);
@@ -503,7 +495,7 @@ void websRedirect(webs_t wp, char_t *url)
 
 	websWrite(wp, T("<html><head>\r\n"));
 
-	if(strchr(url, '>') || strchr(url, '<'))
+	if(strchr(url_str, '>') || strchr(url_str, '<'))
 	{
 		websWrite(wp,"<script>parent.location.href='/%s';</script>\n", INDEXPAGE);
 	}
@@ -539,7 +531,7 @@ void websRedirect_iframe(webs_t wp, char_t *url)
 
 	websWrite(wp, T("<html><head>\r\n"));
 
-	if(strchr(url, '>') || strchr(url, '<'))
+	if(strchr(url_str, '>') || strchr(url_str, '<'))
 	{
 		websWrite(wp,"<script>parent.location.href='/%s';</script>\n", INDEXPAGE);
 	}
@@ -13236,7 +13228,7 @@ static void GetWanStatus(char *state)
 		}
 
 		if (strlen(prefix)) {
-#if defined(RTCONFIG_QCA953X) || defined(RTCONFIG_QCA956X)
+#if defined(RTCONFIG_QCA953X) || defined(RTCONFIG_QCA956X) || defined(RTCONFIG_QCN550X)
 			if (!strncmp(prefix, "vlan2", strlen(prefix))) {
 #else
 			if (!strncmp(prefix, "eth0", strlen(prefix))) {
@@ -15388,6 +15380,25 @@ do_cleanlog_cgi(char *url, FILE *stream) {
 	else if (strcmp(path, "clean_backup_log") == 0) {
 		// TODO : add path here
 	}
+}
+
+void update_wlan_log(int sig){
+	FILE *fp;
+
+	if((fp = fopen("/tmp/wlanlog.txt", "w")) != NULL) {
+		ej_wl_status_2g(0, fp, 0, NULL);
+		fclose(fp);
+		sig = 1;
+		nvram_set("fb_wlanlog_done", "1");
+	}
+}
+
+static void
+do_update_wlanlog_cgi(char *url, FILE *stream) {
+
+	int ret = 0;
+	update_wlan_log(ret);
+	websWrite(stream, "{\"statusCode\":\"%d\"}", (ret)?200:400);
 }
 
 //2008.08 magic{
@@ -18449,35 +18460,46 @@ int ej_UI_rs_status(int eid, webs_t wp, int argc, char **argv){
 #define WEBDEVINFO_VER 1 //log ej_webdavInfo
 int ej_webdavInfo(int eid, webs_t wp, int argc, char **argv) {
 
+	char ssid[32];
 	unsigned short ExtendCap=0;
 #ifdef RTCONFIG_WEBDAV
-	ExtendCap |= __cpu_to_le16(EXTEND_CAP_WEBDAV);
+	ExtendCap |= EXTEND_CAP_WEBDAV;
 #else
 	ExtendCap = 0;
 	if(check_if_file_exist("/opt/etc/init.d/S50aicloud"))
-		ExtendCap |= __cpu_to_le16(EXTEND_CAP_WEBDAV);
+		ExtendCap |= EXTEND_CAP_WEBDAV;
 #endif
 #ifdef RTCONFIG_TUNNEL
-	ExtendCap |= __cpu_to_le16(EXTEND_CAP_AAE_BASIC);
+	ExtendCap |= EXTEND_CAP_AAE_BASIC;
 #endif
-	ExtendCap |= __cpu_to_le16(EXTEND_CAP_SWCTRL);
+	ExtendCap |= EXTEND_CAP_SWCTRL;
 #ifdef RTCONFIG_AMAS
 #ifdef RTCONFIG_SW_HW_AUTH
 	if (getAmasSupportMode() != 0)
-		ExtendCap |= __cpu_to_le16(EXTEND_CAP_AMAS);
-#else
-	ExtendCap |= __cpu_to_le16(EXTEND_CAP_AMAS);
+	{
+#endif
+		if (!repeater_mode()
+#if defined(RTCONFIG_BCMWL6) && defined(RTCONFIG_PROXYSTA)
+			&& !psr_mode()
+#endif
+#ifdef RTCONFIG_DPSTA
+			&& !(dpsta_mode() && nvram_get_int("re_mode") == 0)
+#endif
+		)
+			ExtendCap |= EXTEND_CAP_AMAS;
+#ifdef RTCONFIG_SW_HW_AUTH
+        }
 #endif
 	if (nvram_get_int("amas_bdl"))
-		ExtendCap |= __cpu_to_le16(EXTEND_CAP_AMAS_BDL);
+		ExtendCap |= EXTEND_CAP_AMAS_BDL;
 #endif
 #if defined(RTCONFIG_CFGSYNC) && defined(RTCONFIG_MASTER_DET)
 	if (nvram_get_int("cfg_master"))
-		ExtendCap |= __cpu_to_le16(EXTEND_CAP_MASTER);
+		ExtendCap |= EXTEND_CAP_MASTER;
 #endif
-
+	get_discovery_ssid(ssid, sizeof(ssid));
 	websWrite(wp, "// pktInfo=['PrinterInfo','SSID','NetMask','ProductID','FWVersion','OPMode','MACAddr','Regulation'];\n");
-	websWrite(wp, "pktInfo=['','%s',", nvram_safe_get("wl0_ssid"));
+	websWrite(wp, "pktInfo=['','%s',", ssid);
 	websWrite(wp, "'%s',", nvram_safe_get("lan_netmask"));
 	websWrite(wp, "'%s',", get_productid());
 	websWrite(wp, "'%s.%s',", nvram_safe_get("firmver"), nvram_safe_get("buildno"));
@@ -21680,7 +21702,7 @@ ej_get_default_ssid(int eid, webs_t wp, int argc, char_t **argv)
 	char word[256], *next;
 
 	websWrite(wp, "[");
-#ifdef RTCONFIG_NEWSSID_REV2
+#if defined(RTCONFIG_NEWSSID_REV2) || defined(RTCONFIG_NEWSSID_REV4)
 	while (unit < band_num){
 		SKIP_ABSENT_BAND_AND_INC_UNIT(unit)
 		if(unit != 0) websWrite(wp, ", ");
@@ -22824,7 +22846,7 @@ struct ej_handler ej_handlers[] = {
 #endif
 #endif
 	{ "wl_auth_list", ej_wl_auth_list},
-#if defined(CONFIG_BCMWL5) || defined(RTCONFIG_QCA) || defined(RTCONFIG_LANTIQ)
+#if defined(CONFIG_BCMWL5) || defined(RTCONFIG_QCA) || defined(RTCONFIG_LANTIQ) || defined(RTCONFIG_RALINK)
 	{ "wl_control_channel", ej_wl_control_channel},
 #endif
 	{ "get_wlstainfo_list", ej_get_wlstainfo_list},
@@ -23204,7 +23226,11 @@ struct useful_redirect_list useful_redirect_lists[] = {
 	{"aidisk.asp", NULL},
 	{"AiProtection_**.asp", NULL},
 	{"APP_Installation.asp", NULL},
-	{"cloud_**.asp", NULL},
+	{"cloud_main.asp", NULL},
+	{"cloud_router_sync.asp", NULL},
+	{"cloud_settings.asp", NULL},
+	{"cloud_syslog.asp", NULL},
+	{"cloud_sync.asp", NULL},
 	{"Feedback_Info.asp", NULL},
 	{"GameBoost.asp", NULL},
 	{"Guest_network**.asp", NULL},

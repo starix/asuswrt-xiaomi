@@ -9023,6 +9023,9 @@ again:
 #endif
 #endif
 #endif
+#ifdef RTCONFIG_BT_CONN
+				stop_dbus_daemon();
+#endif
 				if (!(r = build_temp_rootfs(TMP_ROOTFS_MNT_POINT)))
 					sw = 1;
 #if !defined(RTMIR3G)
@@ -11183,8 +11186,12 @@ check_ddr_done:
 	else if (strcmp(script, "sig_check") == 0)
 	{
 		if(action & RC_SERVICE_START){
-			eval("sig_update.sh");
-			if(nvram_get_int("sig_state_flag")) eval("sig_upgrade.sh", "1");
+			char *sig_update_argv[] = {"sig_update.sh", NULL};
+			_eval(sig_update_argv, NULL, 0, NULL);
+			if(nvram_get_int("sig_state_flag")){
+				char *sig_upgrade_argv[] = {"sig_upgrade.sh", NULL};
+				_eval(sig_upgrade_argv, NULL, 0, NULL);
+			}
 			stop_dpi_engine_service(0);
 			start_dpi_engine_service();
 		}

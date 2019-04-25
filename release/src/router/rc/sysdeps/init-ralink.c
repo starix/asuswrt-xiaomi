@@ -1303,6 +1303,8 @@ void init_syspara(void)
 			nvram_set("wl1_country_code", "CN");
 		else if (strcmp(dst, "5G_BAND124") == 0)
 			nvram_set("wl1_country_code", "IN");
+		else if (strcmp(dst, "5G_ALL") == 0)
+			nvram_set("wl1_country_code", "RU");
 		else
 			nvram_set("wl1_country_code", "DB");
 	}

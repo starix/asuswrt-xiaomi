@@ -119,6 +119,7 @@ function check_wan_state(){
 		document.getElementById("fb_desc_disconnect").style.display = "";
 		document.form.fb_country.disabled = "true";
 		document.form.fb_email.disabled = "true";
+		document.form.fb_serviceno.disabled = "true";
 		document.form.attach_syslog.disabled = "true";
 		document.form.attach_cfgfile.disabled = "true";
 		document.form.attach_modemlog.disabled = "true";
@@ -144,6 +145,7 @@ function check_wan_state(){
 		document.getElementById("fb_desc_disconnect").style.display = "none";
 		document.form.fb_country.disabled = "";
 		document.form.fb_email.disabled = "";
+		document.form.fb_serviceno.disabled = "";
 		document.form.attach_syslog.disabled = "";
 		document.form.attach_modemlog.disabled = "";
 		document.form.attach_wlanlog.disabled = "";
@@ -387,7 +389,14 @@ function applyRule(){
 				return false;
 			}
 		}
-
+		
+		var re = new RegExp("^[a-zA-Z][0-9]{10}","gi");
+		if(!re.test(document.form.fb_serviceno.value) && document.form.fb_serviceno.value != ""){
+			alert("<#JS_validchar#>");
+			document.form.fb_serviceno.focus();
+			return false;
+		}
+		
 		//check Diagnostic
 		if(dblog_support) {
 			var dblog_enable = getRadioValue($('form[name="form"]').children().find('input[name=dblog_enable]'));
@@ -782,6 +791,13 @@ function dblog_stop() {
 <th><#feedback_email#> *</th>
 <td>
 	<input type="text" name="fb_email" maxlength="50" class="input_25_table" value="" autocorrect="off" autocapitalize="off">
+</td>
+</tr>
+
+<tr>
+<th><a class="hintstyle" href="javascript:void(0);" onClick="openHint(34,2);">ASUS Service No./Case#</a></th>
+<td>
+	<input type="text" name="fb_serviceno" maxlength="11" class="input_15_table" value="" autocorrect="off" autocapitalize="off">
 </td>
 </tr>
 

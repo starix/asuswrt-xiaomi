@@ -15,3 +15,6 @@ SKU_2G_NCC  =
 SKU_5G_NCC  =
 SKU_2G_JP   = "dummy_sku.dat"
 SKU_5G_JP   = "dummy_sku.dat"
+SKU_2G_EAC   = "20190219-WG9116MAC44-ASU_Single_SKU_power_table-RU_EAC.dat"
+SKU_5G_EAC   = "20190219-WG9116MAC44-ASU_Single_SKU_power_table-RU_EAC.dat"
+

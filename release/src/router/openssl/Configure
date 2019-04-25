@@ -1001,7 +1001,7 @@ PROCESS_ARGS:
 			else	# common if (/^[-+]/), just pass down...
 				{
 				$_ =~ s/%([0-9a-f]{1,2})/chr(hex($1))/gei;
-				$flags.=$_." ";
+				$flags.=" ".$_;
 				}
 			}
 		elsif ($_ =~ /^([^:]+):(.+)$/)
@@ -1157,7 +1157,7 @@ foreach (sort (keys %disabled))
 			$openssl_other_defines .= "#define OPENSSL_NO_$ALGO\n";
 			print " OPENSSL_NO_$ALGO";
 		
-			if (/^err$/)	{ $flags .= "-DOPENSSL_NO_ERR "; }
+			if (/^err$/)	{ $flags .= " -DOPENSSL_NO_ERR"; }
 			elsif (/^asm$/)	{ $no_asm = 1; }
 			}
 		else
@@ -1289,7 +1289,7 @@ if ($target =~ /linux.*\-mips/ && !$no_asm && $flags !~ /\-m(ips|arch=)/) {
 my $no_shared_warn=0;
 my $no_user_cflags=0;
 
-if ($flags ne "")	{ $cflags="$flags$cflags"; }
+if ($flags ne "")	{ $cflags="$cflags$flags"; }
 else			{ $no_user_cflags=1;       }
 
 # Kerberos settings.  The flavor must be provided from outside, either through
