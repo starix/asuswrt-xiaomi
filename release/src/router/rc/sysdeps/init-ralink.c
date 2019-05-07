@@ -1027,8 +1027,8 @@ void init_syspara(void)
 #endif	/* RTAC51U */
 
 
-#if defined(RTAC1200HP) || defined(RTN56UB1) || defined(RTN56UB2) || defined(RTAC1200GA1) || defined(RTAC1200GU) || defined(RTAC85U) || defined(RTAC85P) || defined(RTN800HP) || defined(RTACRH26) || defined(RTMIR3G)
-#if defined(RTAC85U) || defined(RTAC85P) || defined(RTN800HP) || defined(RTACRH26) || defined(RTMIR3G)
+#if defined(RTAC1200HP) || defined(RTN56UB1) || defined(RTN56UB2) || defined(RTAC1200GA1) || defined(RTAC1200GU) || defined(RTAC85U) || defined(RTAC85P) || defined(RTN800HP) || defined(RTACRH26)
+#if defined(RTAC85U) || defined(RTAC85P) || defined(RTN800HP) || defined(RTACRH26)
 	char brstp;
 #else
 	char fixch;
@@ -1086,8 +1086,8 @@ void init_syspara(void)
 	}
 #endif	/* RTAC51U FIX EU2CN */
 
-#if defined(RTAC1200HP) || defined(RTN56UB1) || defined(RTN56UB2) || defined(RTAC1200GA1) || defined(RTAC1200GU) || defined(RTAC85U) || defined(RTAC85P) || defined(RTN800HP) || defined(RTACRH26) || defined(RTMIR3G)
-#if defined(RTAC85U) || defined(RTAC85P) || defined(RTN800HP) || defined(RTACRH26) || defined(RTMIR3G)
+#if defined(RTAC1200HP) || defined(RTN56UB1) || defined(RTN56UB2) || defined(RTAC1200GA1) || defined(RTAC1200GU) || defined(RTAC85U) || defined(RTAC85P) || defined(RTN800HP) || defined(RTACRH26)
+#if defined(RTAC85U) || defined(RTAC85P) || defined(RTN800HP) || defined(RTACRH26)
 	brstp='0';
 	FRead(&brstp, OFFSET_BR_STP, 1);
 	if(brstp=='1')
@@ -1189,6 +1189,15 @@ void init_syspara(void)
 	}
 	else
 	{
+#ifdef RTMIR3G
+		char *cc;
+		cc = nvram_get("wl_country_code");
+		if (cc != NULL && cc[0]) {
+			memcpy(country_code, cc, 2);
+			country_code[2] = '\0';
+		}
+		nvram_set("wl1_txbf_en", "1");
+#endif
 		chk_valid_country_code(country_code);
 		nvram_set("wl_country_code", country_code);
 		nvram_set("wl0_country_code", country_code);
@@ -1431,8 +1440,6 @@ void init_syspara(void)
 	_dprintf("mtd productid: %s\n", nvram_safe_get("productid"));
 	_dprintf("bootloader version: %s\n", nvram_safe_get("blver"));
 	_dprintf("firmware version: %s\n", nvram_safe_get("firmver"));
-
-    nvram_set("wl1_txbf_en", "1");
 
 
 #if defined (RTCONFIG_WLMODULE_RT3352_INIC_MII)
