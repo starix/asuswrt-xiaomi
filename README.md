@@ -1,6 +1,6 @@
 # AsusWRT Xiaomi
 This is version of AsusWRT that works with Xiaomi Mi routers, based on MT7621 CPU.
-Currently R3G v1 is supported, tester is needed for R3Gv2 (or R4A Gigabit version) models.
+Currently R3G v1 is supported, testers are needed for AC2100, Redmi AC2100 and R3Gv2 (or R4A Gigabit version) models.
 
 ## How to install
 1. Download image from Releases page or build it from source
