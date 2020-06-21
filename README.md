@@ -17,7 +17,7 @@ Installation process is similar to OpenWRT
 
 ## How to build image from source
 1. cd release/src-ra-5010
-2. make model (currently available models are: rt-mir3g, rt-mir4a)
+2. make model (currently available models are: rt-mir3g, rt-mir4a, rt-rm2100, rt-r2100)
 
 ## Missing features
 - No dual-wan support
